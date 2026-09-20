@@ -51,7 +51,9 @@ You need these tools before you build or generate code:
   the license (`sudo xcodebuild -license`) if `xcodebuild` asks you to.
 - Android Studio, plus JDK 17 or 21 for command-line Gradle. JDK 25 does not
   run Gradle 8.11.
-- Node 22 (`.nvmrc` pins this).
+- Node 26 (`.nvmrc` pins this). GitHub Actions reads the same file. The
+  forwarder's Cloud Function runtime in `firebase.json` stays `nodejs22`
+  until the Firebase CLI accepts `nodejs26`.
 - [Buf](https://buf.build/docs/installation)
 - The Firebase CLI, logged in with access to project `dnd-sync-2a05c`
   (`firebase login`), if you'll touch the forwarder.

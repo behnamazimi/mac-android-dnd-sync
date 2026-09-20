@@ -5,6 +5,9 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+
 # Code only: proto lint/generate, Android unit tests, forwarder typecheck +
 # unit tests, then Mac unit tests unsigned. No FCM/APNs/LAN/Focus, no
 # `firebase deploy`, no device. Those stay a human checklist (AGENTS.md
@@ -14,9 +17,15 @@ jobs:
     name: Proto + Android + Forwarder (Linux)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: bufbuild/buf-setup-action@v1
+      # github_token defaults to github.token so the Buf CLI download is
+      # authenticated (unauthenticated GitHub API calls from hosted runners
+      # hit the shared IP rate limit). setup_only: install buf, then our
+      # generate-proto.sh / Gradle task run lint+generate themselves.
+      - uses: bufbuild/buf-action@v1
+        with:
+          setup_only: true
 
       - uses: actions/setup-node@v4
         with:
@@ -27,7 +36,9 @@ jobs:
           distribution: temurin
           java-version: "21"
 
-      - uses: android-actions/setup-android@v3
+      # v3's default packages included the removed SDK `tools` package
+      # (`Failed to find package 'tools'`). v4 installs platform-tools.
+      - uses: android-actions/setup-android@v4
 
       - name: Android unit tests (proto + buf lint run as a Gradle dependency)
         run: make test-android
@@ -37,11 +48,17 @@ jobs:
 
   macos:
     name: Mac unit tests (unsigned)
-    runs-on: macos-14
+    # macos-14's default Xcode still treats SwiftUI View helpers as
+    # nonisolated, so @MainActor model reads fail the build. macos-26
+    # matches local Darwin 25 / Xcode 26, where this project compiles.
+    # macos-14 images are also on GitHub's deprecation clock.
+    runs-on: macos-26
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: bufbuild/buf-setup-action@v1
+      - uses: bufbuild/buf-action@v1
+        with:
+          setup_only: true
 
       - name: Generate protobuf stubs
         run: ./scripts/generate-proto.sh
