@@ -39,6 +39,9 @@ currently is).
 - `scripts/apns-send/`, `scripts/fcm-send/` — standalone Node scripts for
   sending diagnostic pushes directly (bypass the forwarder), used for manual
   testing of each phase.
+- `scripts/release.sh` — syncs Mac, Android, and Node package versions,
+  then branches, tags, and pushes. `make release VERSION=…` is the entry
+  point; see [CONTRIBUTING.md](CONTRIBUTING.md) Ship.
 - `Makefile` — the canonical entry point for generate/build/test/deploy/
   diagnostic commands. Run `make help` before reaching for raw
   `xcodebuild`/`gradlew`/`firebase` invocations.
@@ -132,6 +135,9 @@ Prefer `make <target>` (`make help` lists everything, grouped by phase):
   diagnostic push bypassing the forwarder, for a specific device token.
 - `make deploy` / `make health` / `make logs` — forwarder deploy and
   diagnostics against the live Firebase project.
+- `make release VERSION=…` — sync Mac, Android, and package versions, open
+  a release branch, tag, and push. See [CONTRIBUTING.md](CONTRIBUTING.md)
+  Ship.
 
 Android needs JDK 17 or 21 for Gradle (not 25); Mac needs Xcode with the
 macOS 14 SDK. See [Prerequisites](#prerequisites) for full setup.

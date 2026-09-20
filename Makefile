@@ -28,7 +28,7 @@ export PATH := /opt/homebrew/bin:/usr/local/bin:$(PATH)
 	loopback-on loopback-off \
 	apns apns-on apns-off fcm fcm-on fcm-off \
 	health smoke logs deploy deploy-rules firebase-use \
-	bump-version archive-mac export-mac notarize-mac dmg-mac ship-mac \
+	release release-check archive-mac export-mac notarize-mac dmg-mac ship-mac \
 	android-keystore build-android-release ship-android
 
 help:
@@ -82,7 +82,9 @@ help:
 		'  logs                  Tail Cloud Function logs' \
 		'' \
 		'Ship (dogfood: notarized DMG + signed APK, no App Store/Play listing)' \
-		'  bump-version VERSION=…      Bump Mac + Android version strings/build numbers' \
+		'  release VERSION=…           Sync versions, branch, commit, tag, push' \
+		'                              (DRY_RUN=1 prints the plan; NO_PUSH=1 skips push)' \
+		'  release-check               Verify Mac, Android, and package versions match' \
 		'  archive-mac                 xcodebuild archive (Release)' \
 		'  export-mac                  Export Developer ID .app from the archive' \
 		'  notarize-mac                Submit to Apple + wait + staple (needs one-time' \
@@ -288,23 +290,20 @@ logs:
 # the notarytool credential profile, and the Android keystore's *passwords*
 # (generated once, then yours to keep) — see README Ship.
 
-bump-version:
-	@test -n "$(VERSION)" || { printf 'Usage: make bump-version VERSION=0.2.0\n' >&2; exit 1; }
-	@old_build="$$(sed -n 's/.*CURRENT_PROJECT_VERSION = \([0-9][0-9]*\);.*/\1/p' apps/macos/DNDSync.xcodeproj/project.pbxproj | head -1)"; \
-	new_build=$$((old_build + 1)); \
-	sed -i '' \
-		-e "s/MARKETING_VERSION = [^;]*;/MARKETING_VERSION = $(VERSION);/g" \
-		-e "s/CURRENT_PROJECT_VERSION = [0-9][0-9]*;/CURRENT_PROJECT_VERSION = $$new_build;/g" \
-		apps/macos/DNDSync.xcodeproj/project.pbxproj; \
-	old_code="$$(sed -n 's/.*versionCode = \([0-9][0-9]*\).*/\1/p' apps/android/app/build.gradle.kts | head -1)"; \
-	new_code=$$((old_code + 1)); \
-	sed -i '' \
-		-e "s/versionName = \"[^\"]*\"/versionName = \"$(VERSION)\"/" \
-		-e "s/versionCode = [0-9][0-9]*/versionCode = $$new_code/" \
-		apps/android/app/build.gradle.kts; \
-	printf 'Mac %s (build %s), Android %s (versionCode %s).\n' \
-		"$(VERSION)" "$$new_build" "$(VERSION)" "$$new_code"; \
-	printf 'Review the diff, commit, then: git tag v$(VERSION)\n'
+RELEASE_FLAGS :=
+ifeq ($(DRY_RUN),1)
+RELEASE_FLAGS += --dry-run
+endif
+ifeq ($(NO_PUSH),1)
+RELEASE_FLAGS += --no-push
+endif
+
+release:
+	@test -n "$(VERSION)" || { printf 'Usage: make release VERSION=0.2.0\n' >&2; exit 1; }
+	./scripts/release.sh "$(VERSION)" $(RELEASE_FLAGS)
+
+release-check:
+	./scripts/release.sh --check
 
 archive-mac:
 	rm -rf $(MAC_ARCHIVE)
