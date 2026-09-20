@@ -59,7 +59,10 @@ need their own store-listing/review work on top of this.
    name into `apps/macos/DNDSync/CI-signing.xcconfig` (included only by the
    DNDSync Release target) rather than an `xcodebuild` override, so
    SwiftProtobuf is not asked to use a provisioning profile it doesn't
-   support.
+   support. The same name is injected into a copy of
+   `ExportOptions-DeveloperID-CI.plist` at export time; without that
+   mapping, `exportArchive` fails with "requires a provisioning profile
+   with the Push Notifications feature."
 3. Create a GitHub **Environment** named `release` (repo Settings →
    Environments) and add yourself as a **required reviewer**. Every release
    run then pauses for a manual approval before it can touch any secret.

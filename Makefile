@@ -333,11 +333,26 @@ archive-mac:
 		-configuration Release -destination 'generic/platform=macOS' \
 		-archivePath $(MAC_ARCHIVE) archive
 
+# Manual Developer ID export needs an explicit provisioningProfiles
+# mapping for Push. The committed CI plist has none so it can stay
+# nameless; we copy it and inject MACOS_PROFILE_SPECIFIER at export
+# time (same name archive-mac wrote into CI-signing.xcconfig).
 export-mac: archive-mac
 	rm -rf $(MAC_EXPORT)
+	@plist="$(EXPORT_OPTIONS_PLIST)"; \
+	if [ -n "$${CI:-}" ]; then \
+		test -n "$${MACOS_PROFILE_SPECIFIER:-}" || { \
+			printf 'CI export needs MACOS_PROFILE_SPECIFIER. Set MACOS_PROVISIONING_PROFILE_BASE64 on the release environment.\n' >&2; \
+			exit 1; \
+		}; \
+		plist="$(MAC_BUILD_DIR)/ExportOptions.plist"; \
+		cp "$(EXPORT_OPTIONS_PLIST)" "$$plist"; \
+		/usr/libexec/PlistBuddy -c 'Add :provisioningProfiles dict' "$$plist"; \
+		/usr/libexec/PlistBuddy -c "Add :provisioningProfiles:com.dndsync.macos string $$MACOS_PROFILE_SPECIFIER" "$$plist"; \
+	fi; \
 	xcodebuild -exportArchive -archivePath $(MAC_ARCHIVE) \
 		-exportPath $(MAC_EXPORT) \
-		-exportOptionsPlist $(EXPORT_OPTIONS_PLIST)
+		-exportOptionsPlist "$$plist"
 
 notarize-mac: export-mac
 	@ditto -c -k --keepParent "$(MAC_EXPORT)/DNDSync.app" "$(MAC_BUILD_DIR)/DNDSync-notarize.zip"
