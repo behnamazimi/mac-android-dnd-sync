@@ -1,0 +1,10 @@
+// Release signing for the DNDSync app target only.
+//
+// xcodebuild command-line overrides apply to every target, including SPM
+// packages. SwiftProtobuf's resource bundle rejects a provisioning profile,
+// so CI writes Manual / Developer ID / the installed profile name into
+// CI-signing.xcconfig instead of passing PROVISIONING_PROFILE_SPECIFIER on
+// the command line. The "?" include is a no-op when that file is absent
+// (local archives keep Automatic signing).
+CODE_SIGN_STYLE = Automatic
+#include? "CI-signing.xcconfig"

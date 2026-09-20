@@ -79,6 +79,7 @@
 		AA0000000000000000000013 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		AA0000000000000000000014 /* DNDSync.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = DNDSync.entitlements; sourceTree = "<group>"; };
 		AA0000000000000000000210 /* DNDSync-Release.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "DNDSync-Release.entitlements"; sourceTree = "<group>"; };
+		AA0000000000000000000300 /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
 		AA0000000000000000000015 /* ShortcutRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutRunner.swift; sourceTree = "<group>"; };
 		AA0000000000000000000016 /* FocusStatusObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusStatusObserver.swift; sourceTree = "<group>"; };
 		AA0000000000000000000017 /* FocusHarnessModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusHarnessModel.swift; sourceTree = "<group>"; };
@@ -192,6 +193,7 @@
 				AA0000000000000000000013 /* Assets.xcassets */,
 				AA0000000000000000000014 /* DNDSync.entitlements */,
 				AA0000000000000000000210 /* DNDSync-Release.entitlements */,
+				AA0000000000000000000300 /* Signing.xcconfig */,
 			);
 			path = DNDSync;
 			sourceTree = "<group>";
@@ -557,10 +559,10 @@
 		};
 		AA0000000000000000000063 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = AA0000000000000000000300 /* Signing.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = "DNDSync/DNDSync-Release.entitlements";
-				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = MVSF9NZ97S;

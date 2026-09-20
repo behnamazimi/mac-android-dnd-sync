@@ -310,6 +310,11 @@ release:
 release-check:
 	./scripts/release.sh --check
 
+# CI must not pass PROVISIONING_PROFILE_SPECIFIER on the xcodebuild command
+# line: that setting is inherited by SPM packages, and SwiftProtobuf's
+# resource bundle then fails with "does not support provisioning profiles."
+# Write the profile onto the DNDSync target only (Signing.xcconfig includes
+# this file). Local archives keep Automatic signing when the file is absent.
 archive-mac:
 	rm -rf $(MAC_ARCHIVE)
 	@if [ -n "$${CI:-}" ]; then \
@@ -317,18 +322,16 @@ archive-mac:
 			printf 'CI archive needs MACOS_PROFILE_SPECIFIER. Set MACOS_PROVISIONING_PROFILE_BASE64 on the release environment.\n' >&2; \
 			exit 1; \
 		}; \
-		xcodebuild -project apps/macos/DNDSync.xcodeproj -scheme DNDSync \
-			-configuration Release -destination 'generic/platform=macOS' \
-			-archivePath $(MAC_ARCHIVE) archive \
-			CODE_SIGN_STYLE=Manual \
-			CODE_SIGN_IDENTITY="Developer ID Application" \
-			DEVELOPMENT_TEAM=$(MAC_TEAM_ID) \
-			PROVISIONING_PROFILE_SPECIFIER="$$MACOS_PROFILE_SPECIFIER"; \
-	else \
-		xcodebuild -project apps/macos/DNDSync.xcodeproj -scheme DNDSync \
-			-configuration Release -destination 'generic/platform=macOS' \
-			-archivePath $(MAC_ARCHIVE) archive; \
+		{ \
+			printf 'CODE_SIGN_STYLE = Manual\n'; \
+			printf 'CODE_SIGN_IDENTITY = Developer ID Application\n'; \
+			printf 'DEVELOPMENT_TEAM = %s\n' "$(MAC_TEAM_ID)"; \
+			printf 'PROVISIONING_PROFILE_SPECIFIER = %s\n' "$$MACOS_PROFILE_SPECIFIER"; \
+		} > apps/macos/DNDSync/CI-signing.xcconfig; \
 	fi
+	xcodebuild -project apps/macos/DNDSync.xcodeproj -scheme DNDSync \
+		-configuration Release -destination 'generic/platform=macOS' \
+		-archivePath $(MAC_ARCHIVE) archive
 
 export-mac: archive-mac
 	rm -rf $(MAC_EXPORT)

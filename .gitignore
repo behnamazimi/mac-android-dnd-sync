@@ -52,6 +52,7 @@ forwarder/.env
 forwarder/*.p8
 forwarder/**/*service-account*.json
 apps/macos/DNDSync/ForwarderSecrets.local.swift
+apps/macos/DNDSync/CI-signing.xcconfig
 
 # Firebase CLI local state / debug logs
 .firebase/
