@@ -104,8 +104,8 @@ doctor:
 	else printf '[fail] buf not on PATH — https://buf.build/docs/installation\n'; fail=1; fi; \
 	if command -v node >/dev/null 2>&1; then \
 		nv="$$(node --version)"; \
-		case "$$nv" in v22.*) printf '[ok]   node %s\n' "$$nv" ;; \
-		*) printf '[warn] node %s (repo targets Node 22 — see .nvmrc)\n' "$$nv"; warn=1 ;; esac; \
+		case "$$nv" in v26.*) printf '[ok]   node %s\n' "$$nv" ;; \
+		*) printf '[warn] node %s (repo targets Node 26 — see .nvmrc)\n' "$$nv"; warn=1 ;; esac; \
 	else printf '[fail] node not on PATH\n'; fail=1; fi; \
 	if command -v java >/dev/null 2>&1; then \
 		jv="$$(java -version 2>&1 | head -1)"; \
