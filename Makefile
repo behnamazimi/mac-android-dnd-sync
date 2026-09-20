@@ -317,18 +317,10 @@ archive-mac:
 			printf 'CI archive needs MACOS_PROFILE_SPECIFIER. Set MACOS_PROVISIONING_PROFILE_BASE64 on the release environment.\n' >&2; \
 			exit 1; \
 		}; \
-		xcodebuild -project apps/macos/DNDSync.xcodeproj -scheme DNDSync \
-			-configuration Release -destination 'generic/platform=macOS' \
-			-archivePath $(MAC_ARCHIVE) archive \
-			CODE_SIGN_STYLE=Manual \
-			CODE_SIGN_IDENTITY="Developer ID Application" \
-			DEVELOPMENT_TEAM=$(MAC_TEAM_ID) \
-			PROVISIONING_PROFILE_SPECIFIER="$$MACOS_PROFILE_SPECIFIER"; \
-	else \
-		xcodebuild -project apps/macos/DNDSync.xcodeproj -scheme DNDSync \
-			-configuration Release -destination 'generic/platform=macOS' \
-			-archivePath $(MAC_ARCHIVE) archive; \
 	fi
+	xcodebuild -project apps/macos/DNDSync.xcodeproj -scheme DNDSync \
+		-configuration Release -destination 'generic/platform=macOS' \
+		-archivePath $(MAC_ARCHIVE) archive
 
 export-mac: archive-mac
 	rm -rf $(MAC_EXPORT)

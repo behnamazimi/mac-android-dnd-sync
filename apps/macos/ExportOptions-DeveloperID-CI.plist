@@ -10,5 +10,10 @@
 	<string>manual</string>
 	<key>signingCertificate</key>
 	<string>Developer ID Application</string>
+	<key>provisioningProfiles</key>
+	<dict>
+		<key>com.dndsync.macos</key>
+		<string>DND Sync Developer ID</string>
+	</dict>
 </dict>
 </plist>
