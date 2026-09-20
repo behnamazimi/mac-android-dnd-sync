@@ -1,0 +1,62 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets / local env
+.env
+.env.*
+!.env.example
+!**/.env.example
+apps/android/app/google-services.json
+scripts/fcm-send/firebase-service-account.json
+scripts/apns-send/*.p8
+apps/android/*.jks
+apps/android/*.keystore
+
+# Xcode
+xcuserdata/
+DerivedData/
+*.xcuserstate
+*.xccheckout
+*.xcscmblueprint
+build/
+
+# Android / Gradle
+.gradle/
+**/build/
+local.properties
+.idea/
+*.iml
+.cxx/
+captures/
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Proto generated output (keep directory placeholders)
+apps/macos/Generated/**
+!apps/macos/Generated/.gitkeep
+apps/android/generated/**
+!apps/android/generated/.gitkeep
+forwarder/generated/**
+!forwarder/generated/.gitkeep
+forwarder/lib/
+forwarder/.env
+forwarder/*.p8
+forwarder/**/*service-account*.json
+apps/macos/DNDSync/ForwarderSecrets.local.swift
+
+# Firebase CLI local state / debug logs
+.firebase/
+firebase-debug.log
+*-debug.log
+
+# make dmg-mac / notarize-mac output
+*.dmg

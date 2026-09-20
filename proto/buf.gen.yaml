@@ -1,0 +1,19 @@
+version: v2
+plugins:
+  - remote: buf.build/apple/swift:v1.28.2
+    out: ../apps/macos/Generated
+    opt:
+      - Visibility=Public
+      - FileNaming=PathToUnderscores
+  - remote: buf.build/protocolbuffers/java:v29.3
+    out: ../apps/android/generated
+    opt:
+      - lite
+  - remote: buf.build/protocolbuffers/kotlin:v29.3
+    out: ../apps/android/generated
+    opt:
+      - lite
+  - remote: buf.build/bufbuild/es:v2.2.5
+    out: ../forwarder/generated
+    opt:
+      - target=ts

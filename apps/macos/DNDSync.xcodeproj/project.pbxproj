@@ -1,0 +1,676 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		AA0000000000000000000001 /* DNDSyncApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000011 /* DNDSyncApp.swift */; };
+		AA0000000000000000000147 /* ProductRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000146 /* ProductRootView.swift */; };
+		AA0000000000000000000149 /* WelcomeStepView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000148 /* WelcomeStepView.swift */; };
+		AA000000000000000000014B /* GrantAccessStepView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000014A /* GrantAccessStepView.swift */; };
+		AA000000000000000000014D /* ShortcutsStepView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000014C /* ShortcutsStepView.swift */; };
+		AA000000000000000000014F /* LoginItemStepView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000014E /* LoginItemStepView.swift */; };
+		AA0000000000000000000151 /* QRStepView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000150 /* QRStepView.swift */; };
+		AA0000000000000000000153 /* HomeScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000152 /* HomeScreen.swift */; };
+		AA0000000000000000000155 /* SettingsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000154 /* SettingsScreen.swift */; };
+		AA0000000000000000000157 /* DiagnosticsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000156 /* DiagnosticsScreen.swift */; };
+		AA0000000000000000000003 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000013 /* Assets.xcassets */; };
+		AA0000000000000000000004 /* ShortcutRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000015 /* ShortcutRunner.swift */; };
+		AA0000000000000000000005 /* FocusStatusObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000016 /* FocusStatusObserver.swift */; };
+		AA0000000000000000000006 /* FocusHarnessModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000017 /* FocusHarnessModel.swift */; };
+		AA0000000000000000000007 /* DND Sync On.shortcut in Resources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000018 /* DND Sync On.shortcut */; };
+		AA0000000000000000000008 /* DND Sync Off.shortcut in Resources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000019 /* DND Sync Off.shortcut */; };
+		AA0000000000000000000009 /* LocalCommandServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000001A /* LocalCommandServer.swift */; };
+		AA000000000000000000000A /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000001B /* AppDelegate.swift */; };
+		AA000000000000000000000B /* ApnsPushReceiver.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000001C /* ApnsPushReceiver.swift */; };
+		AA000000000000000000000C /* CloudEnvelopeCodec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000BC /* CloudEnvelopeCodec.swift */; };
+		AA000000000000000000000D /* ForwarderSecrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000BD /* ForwarderSecrets.swift */; };
+		AA000000000000000000000E /* ForwarderSecrets.local.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000BE /* ForwarderSecrets.local.swift */; };
+		AA000000000000000000000F /* ForwarderClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000BF /* ForwarderClient.swift */; };
+		AA00000000000000000000C0 /* LanConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000B0 /* LanConstants.swift */; };
+		AA00000000000000000000C1 /* LengthPrefixedFramer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000B1 /* LengthPrefixedFramer.swift */; };
+		AA00000000000000000000C2 /* LanSyncGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000B2 /* LanSyncGate.swift */; };
+		AA00000000000000000000C3 /* LanSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000B3 /* LanSyncService.swift */; };
+		AA00000000000000000000C4 /* dndsync_v1_dnd_state.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000B5 /* dndsync_v1_dnd_state.pb.swift */; };
+		AA00000000000000000000C5 /* dndsync_v1_ping.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000B6 /* dndsync_v1_ping.pb.swift */; };
+		AA00000000000000000000C6 /* SwiftProtobuf in Frameworks */ = {isa = PBXBuildFile; productRef = AA00000000000000000000A1 /* SwiftProtobuf */; };
+		AA00000000000000000000CD /* dndsync_v1_cloud_envelope.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000BA /* dndsync_v1_cloud_envelope.pb.swift */; };
+		AA00000000000000000000E6 /* E2ECrypto.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000E1 /* E2ECrypto.swift */; };
+		AA00000000000000000000E7 /* PairStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000E2 /* PairStore.swift */; };
+		AA00000000000000000000E8 /* PairPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000E3 /* PairPayload.swift */; };
+		AA00000000000000000000F2 /* ProductRouting.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000F1 /* ProductRouting.swift */; };
+		AA00000000000000000000F6 /* ProductChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000F5 /* ProductChrome.swift */; };
+		AA00000000000000000000F8 /* NetworkPathMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000F7 /* NetworkPathMonitor.swift */; };
+		AA0000000000000000000114 /* dndsync_v1_pair_control.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000113 /* dndsync_v1_pair_control.pb.swift */; };
+		AA0000000000000000000120 /* FailedApplyNotifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000121 /* FailedApplyNotifier.swift */; };
+		AA0000000000000000000131 /* FocusApply.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000130 /* FocusApply.swift */; };
+		AA0000000000000000000137 /* PairPorts.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000136 /* PairPorts.swift */; };
+		AA0000000000000000000139 /* PairSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000138 /* PairSession.swift */; };
+		AA000000000000000000013F /* SyncPorts.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000013E /* SyncPorts.swift */; };
+		AA0000000000000000000141 /* SyncSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000140 /* SyncSession.swift */; };
+		AA00000000000000000000C7 /* DndStateFixtureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000B7 /* DndStateFixtureTests.swift */; };
+		AA00000000000000000000FC /* ProductRoutingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000FB /* ProductRoutingTests.swift */; };
+		AA00000000000000000000FF /* FocusStatusObserverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000FE /* FocusStatusObserverTests.swift */; };
+		AA0000000000000000000133 /* FocusApplyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000132 /* FocusApplyTests.swift */; };
+		AA000000000000000000013B /* PairSessionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000013A /* PairSessionTests.swift */; };
+		AA000000000000000000013D /* PairTestDoubles.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000013C /* PairTestDoubles.swift */; };
+		AA0000000000000000000143 /* SyncSessionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000142 /* SyncSessionTests.swift */; };
+		AA0000000000000000000145 /* SyncTestDoubles.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000144 /* SyncTestDoubles.swift */; };
+		AA0000000000000000000135 /* InMemoryFocusApply.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000134 /* InMemoryFocusApply.swift */; };
+		AA00000000000000000000C8 /* dnd_state_v1.binpb in Resources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000B9 /* dnd_state_v1.binpb */; };
+		AA00000000000000000000C9 /* cloud_envelope_v1.binpb in Resources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000BB /* cloud_envelope_v1.binpb */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		AA0000000000000000000010 /* DNDSync.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DNDSync.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA0000000000000000000011 /* DNDSyncApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DNDSyncApp.swift; sourceTree = "<group>"; };
+		AA0000000000000000000146 /* ProductRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductRootView.swift; sourceTree = "<group>"; };
+		AA0000000000000000000148 /* WelcomeStepView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeStepView.swift; sourceTree = "<group>"; };
+		AA000000000000000000014A /* GrantAccessStepView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrantAccessStepView.swift; sourceTree = "<group>"; };
+		AA000000000000000000014C /* ShortcutsStepView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutsStepView.swift; sourceTree = "<group>"; };
+		AA000000000000000000014E /* LoginItemStepView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginItemStepView.swift; sourceTree = "<group>"; };
+		AA0000000000000000000150 /* QRStepView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRStepView.swift; sourceTree = "<group>"; };
+		AA0000000000000000000152 /* HomeScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeScreen.swift; sourceTree = "<group>"; };
+		AA0000000000000000000154 /* SettingsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsScreen.swift; sourceTree = "<group>"; };
+		AA0000000000000000000156 /* DiagnosticsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticsScreen.swift; sourceTree = "<group>"; };
+		AA0000000000000000000013 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		AA0000000000000000000014 /* DNDSync.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = DNDSync.entitlements; sourceTree = "<group>"; };
+		AA0000000000000000000210 /* DNDSync-Release.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "DNDSync-Release.entitlements"; sourceTree = "<group>"; };
+		AA0000000000000000000015 /* ShortcutRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutRunner.swift; sourceTree = "<group>"; };
+		AA0000000000000000000016 /* FocusStatusObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusStatusObserver.swift; sourceTree = "<group>"; };
+		AA0000000000000000000017 /* FocusHarnessModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusHarnessModel.swift; sourceTree = "<group>"; };
+		AA0000000000000000000018 /* DND Sync On.shortcut */ = {isa = PBXFileReference; lastKnownFileType = file; path = "DND Sync On.shortcut"; sourceTree = "<group>"; };
+		AA0000000000000000000019 /* DND Sync Off.shortcut */ = {isa = PBXFileReference; lastKnownFileType = file; path = "DND Sync Off.shortcut"; sourceTree = "<group>"; };
+		AA000000000000000000001A /* LocalCommandServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalCommandServer.swift; sourceTree = "<group>"; };
+		AA000000000000000000001B /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		AA000000000000000000001C /* ApnsPushReceiver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApnsPushReceiver.swift; sourceTree = "<group>"; };
+		AA00000000000000000000B0 /* LanConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanConstants.swift; sourceTree = "<group>"; };
+		AA00000000000000000000B1 /* LengthPrefixedFramer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LengthPrefixedFramer.swift; sourceTree = "<group>"; };
+		AA00000000000000000000B2 /* LanSyncGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanSyncGate.swift; sourceTree = "<group>"; };
+		AA00000000000000000000B3 /* LanSyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanSyncService.swift; sourceTree = "<group>"; };
+		AA00000000000000000000B4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		AA00000000000000000000B5 /* dndsync_v1_dnd_state.pb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = dndsync_v1_dnd_state.pb.swift; sourceTree = "<group>"; };
+		AA00000000000000000000B6 /* dndsync_v1_ping.pb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = dndsync_v1_ping.pb.swift; sourceTree = "<group>"; };
+		AA00000000000000000000B7 /* DndStateFixtureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DndStateFixtureTests.swift; sourceTree = "<group>"; };
+		AA00000000000000000000B9 /* dnd_state_v1.binpb */ = {isa = PBXFileReference; lastKnownFileType = file; name = dnd_state_v1.binpb; path = ../../proto/fixtures/dnd_state_v1.binpb; sourceTree = SOURCE_ROOT; };
+		AA00000000000000000000BA /* dndsync_v1_cloud_envelope.pb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = dndsync_v1_cloud_envelope.pb.swift; sourceTree = "<group>"; };
+		AA00000000000000000000BB /* cloud_envelope_v1.binpb */ = {isa = PBXFileReference; lastKnownFileType = file; name = cloud_envelope_v1.binpb; path = ../../proto/fixtures/cloud_envelope_v1.binpb; sourceTree = SOURCE_ROOT; };
+		AA00000000000000000000BC /* CloudEnvelopeCodec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudEnvelopeCodec.swift; sourceTree = "<group>"; };
+		AA00000000000000000000BD /* ForwarderSecrets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForwarderSecrets.swift; sourceTree = "<group>"; };
+		AA00000000000000000000BE /* ForwarderSecrets.local.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForwarderSecrets.local.swift; sourceTree = "<group>"; };
+		AA00000000000000000000BF /* ForwarderClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForwarderClient.swift; sourceTree = "<group>"; };
+		AA00000000000000000000E1 /* E2ECrypto.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = E2ECrypto.swift; sourceTree = "<group>"; };
+		AA00000000000000000000E2 /* PairStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PairStore.swift; sourceTree = "<group>"; };
+		AA00000000000000000000E3 /* PairPayload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PairPayload.swift; sourceTree = "<group>"; };
+		AA00000000000000000000F1 /* ProductRouting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductRouting.swift; sourceTree = "<group>"; };
+		AA00000000000000000000F5 /* ProductChrome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductChrome.swift; sourceTree = "<group>"; };
+		AA00000000000000000000F7 /* NetworkPathMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkPathMonitor.swift; sourceTree = "<group>"; };
+		AA00000000000000000000FB /* ProductRoutingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductRoutingTests.swift; sourceTree = "<group>"; };
+		AA00000000000000000000FE /* FocusStatusObserverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusStatusObserverTests.swift; sourceTree = "<group>"; };
+		AA0000000000000000000113 /* dndsync_v1_pair_control.pb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = dndsync_v1_pair_control.pb.swift; sourceTree = "<group>"; };
+		AA0000000000000000000121 /* FailedApplyNotifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FailedApplyNotifier.swift; sourceTree = "<group>"; };
+		AA0000000000000000000130 /* FocusApply.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusApply.swift; sourceTree = "<group>"; };
+		AA0000000000000000000136 /* PairPorts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PairPorts.swift; sourceTree = "<group>"; };
+		AA0000000000000000000138 /* PairSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PairSession.swift; sourceTree = "<group>"; };
+		AA000000000000000000013E /* SyncPorts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncPorts.swift; sourceTree = "<group>"; };
+		AA0000000000000000000140 /* SyncSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncSession.swift; sourceTree = "<group>"; };
+		AA0000000000000000000142 /* SyncSessionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncSessionTests.swift; sourceTree = "<group>"; };
+		AA0000000000000000000144 /* SyncTestDoubles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncTestDoubles.swift; sourceTree = "<group>"; };
+		AA000000000000000000013A /* PairSessionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PairSessionTests.swift; sourceTree = "<group>"; };
+		AA000000000000000000013C /* PairTestDoubles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PairTestDoubles.swift; sourceTree = "<group>"; };
+		AA0000000000000000000132 /* FocusApplyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusApplyTests.swift; sourceTree = "<group>"; };
+		AA0000000000000000000134 /* InMemoryFocusApply.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InMemoryFocusApply.swift; sourceTree = "<group>"; };
+		AA00000000000000000000D1 /* DNDSyncTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DNDSyncTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		AA0000000000000000000020 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA00000000000000000000C6 /* SwiftProtobuf in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		AA0000000000000000000030 = {
+			isa = PBXGroup;
+			children = (
+				AA0000000000000000000031 /* DNDSync */,
+				AA0000000000000000000034 /* Shortcuts */,
+				AA0000000000000000000033 /* Generated */,
+				AA00000000000000000000E0 /* DNDSyncTests */,
+				AA0000000000000000000032 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		AA0000000000000000000031 /* DNDSync */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000000000000000000011 /* DNDSyncApp.swift */,
+				AA0000000000000000000015 /* ShortcutRunner.swift */,
+				AA0000000000000000000016 /* FocusStatusObserver.swift */,
+				AA0000000000000000000130 /* FocusApply.swift */,
+				AA0000000000000000000017 /* FocusHarnessModel.swift */,
+				AA0000000000000000000121 /* FailedApplyNotifier.swift */,
+				AA000000000000000000001A /* LocalCommandServer.swift */,
+				AA000000000000000000001B /* AppDelegate.swift */,
+				AA000000000000000000001C /* ApnsPushReceiver.swift */,
+				AA00000000000000000000B0 /* LanConstants.swift */,
+				AA00000000000000000000B1 /* LengthPrefixedFramer.swift */,
+				AA00000000000000000000B2 /* LanSyncGate.swift */,
+				AA00000000000000000000B3 /* LanSyncService.swift */,
+				AA00000000000000000000BC /* CloudEnvelopeCodec.swift */,
+				AA00000000000000000000BD /* ForwarderSecrets.swift */,
+				AA00000000000000000000BE /* ForwarderSecrets.local.swift */,
+				AA00000000000000000000BF /* ForwarderClient.swift */,
+				AA00000000000000000000E1 /* E2ECrypto.swift */,
+				AA00000000000000000000E2 /* PairStore.swift */,
+				AA0000000000000000000136 /* PairPorts.swift */,
+				AA0000000000000000000138 /* PairSession.swift */,
+				AA000000000000000000013E /* SyncPorts.swift */,
+				AA0000000000000000000140 /* SyncSession.swift */,
+				AA00000000000000000000E3 /* PairPayload.swift */,
+				AA00000000000000000000F1 /* ProductRouting.swift */,
+				AA0000000000000000000146 /* ProductRootView.swift */,
+				AA0000000000000000000148 /* WelcomeStepView.swift */,
+				AA000000000000000000014A /* GrantAccessStepView.swift */,
+				AA000000000000000000014C /* ShortcutsStepView.swift */,
+				AA000000000000000000014E /* LoginItemStepView.swift */,
+				AA0000000000000000000150 /* QRStepView.swift */,
+				AA0000000000000000000152 /* HomeScreen.swift */,
+				AA0000000000000000000154 /* SettingsScreen.swift */,
+				AA0000000000000000000156 /* DiagnosticsScreen.swift */,
+				AA00000000000000000000F5 /* ProductChrome.swift */,
+				AA00000000000000000000F7 /* NetworkPathMonitor.swift */,
+				AA00000000000000000000B4 /* Info.plist */,
+				AA0000000000000000000013 /* Assets.xcassets */,
+				AA0000000000000000000014 /* DNDSync.entitlements */,
+				AA0000000000000000000210 /* DNDSync-Release.entitlements */,
+			);
+			path = DNDSync;
+			sourceTree = "<group>";
+		};
+		AA0000000000000000000032 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000000000000000000010 /* DNDSync.app */,
+				AA00000000000000000000D1 /* DNDSyncTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		AA0000000000000000000033 /* Generated */ = {
+			isa = PBXGroup;
+			children = (
+				AA00000000000000000000B5 /* dndsync_v1_dnd_state.pb.swift */,
+				AA00000000000000000000B6 /* dndsync_v1_ping.pb.swift */,
+				AA00000000000000000000BA /* dndsync_v1_cloud_envelope.pb.swift */,
+				AA0000000000000000000113 /* dndsync_v1_pair_control.pb.swift */,
+			);
+			path = Generated;
+			sourceTree = "<group>";
+		};
+		AA0000000000000000000034 /* Shortcuts */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000000000000000000018 /* DND Sync On.shortcut */,
+				AA0000000000000000000019 /* DND Sync Off.shortcut */,
+			);
+			path = Shortcuts;
+			sourceTree = "<group>";
+		};
+		AA00000000000000000000E0 /* DNDSyncTests */ = {
+			isa = PBXGroup;
+			children = (
+				AA00000000000000000000B7 /* DndStateFixtureTests.swift */,
+				AA00000000000000000000FB /* ProductRoutingTests.swift */,
+				AA00000000000000000000FE /* FocusStatusObserverTests.swift */,
+				AA0000000000000000000132 /* FocusApplyTests.swift */,
+				AA0000000000000000000134 /* InMemoryFocusApply.swift */,
+				AA000000000000000000013A /* PairSessionTests.swift */,
+				AA000000000000000000013C /* PairTestDoubles.swift */,
+				AA0000000000000000000142 /* SyncSessionTests.swift */,
+				AA0000000000000000000144 /* SyncTestDoubles.swift */,
+				AA00000000000000000000B9 /* dnd_state_v1.binpb */,
+				AA00000000000000000000BB /* cloud_envelope_v1.binpb */,
+			);
+			path = DNDSyncTests;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		AA0000000000000000000040 /* DNDSync */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AA0000000000000000000052 /* Build configuration list for PBXNativeTarget "DNDSync" */;
+			buildPhases = (
+				AA0000000000000000000200 /* Generate Proto */,
+				AA00000000000000000000F0 /* Copy Forwarder Secrets */,
+				AA0000000000000000000021 /* Sources */,
+				AA0000000000000000000020 /* Frameworks */,
+				AA0000000000000000000022 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = DNDSync;
+			packageProductDependencies = (
+				AA00000000000000000000A1 /* SwiftProtobuf */,
+			);
+			productName = DNDSync;
+			productReference = AA0000000000000000000010 /* DNDSync.app */;
+			productType = "com.apple.product-type.application";
+		};
+		AA00000000000000000000D0 /* DNDSyncTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AA00000000000000000000D7 /* Build configuration list for PBXNativeTarget "DNDSyncTests" */;
+			buildPhases = (
+				AA00000000000000000000D2 /* Sources */,
+				AA00000000000000000000D3 /* Frameworks */,
+				AA00000000000000000000D4 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				AA00000000000000000000DA /* PBXTargetDependency */,
+			);
+			name = DNDSyncTests;
+			productName = DNDSyncTests;
+			productReference = AA00000000000000000000D1 /* DNDSyncTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		AA0000000000000000000000 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					AA0000000000000000000040 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+					AA00000000000000000000D0 = {
+						CreatedOnToolsVersion = 15.0;
+						TestTargetID = AA0000000000000000000040;
+					};
+				};
+			};
+			buildConfigurationList = AA0000000000000000000050 /* Build configuration list for PBXProject "DNDSync" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = AA0000000000000000000030;
+			packageReferences = (
+				AA00000000000000000000A0 /* XCRemoteSwiftPackageReference "swift-protobuf" */,
+			);
+			productRefGroup = AA0000000000000000000032 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				AA0000000000000000000040 /* DNDSync */,
+				AA00000000000000000000D0 /* DNDSyncTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		AA0000000000000000000022 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA0000000000000000000003 /* Assets.xcassets in Resources */,
+				AA0000000000000000000007 /* DND Sync On.shortcut in Resources */,
+				AA0000000000000000000008 /* DND Sync Off.shortcut in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		AA0000000000000000000200 /* Generate Proto */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Generate Proto";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/../../scripts/generate-proto.sh\"\n";
+		};
+		AA00000000000000000000F0 /* Copy Forwarder Secrets */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/DNDSync/ForwarderSecrets.local.swift.example",
+			);
+			name = "Copy Forwarder Secrets";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(SRCROOT)/DNDSync/ForwarderSecrets.local.swift",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "LOCAL=\"${SRCROOT}/DNDSync/ForwarderSecrets.local.swift\"\nEXAMPLE=\"${SRCROOT}/DNDSync/ForwarderSecrets.local.swift.example\"\nif [ ! -f \"$LOCAL\" ]; then\n  cp \"$EXAMPLE\" \"$LOCAL\"\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		AA0000000000000000000021 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA0000000000000000000001 /* DNDSyncApp.swift in Sources */,
+				AA0000000000000000000004 /* ShortcutRunner.swift in Sources */,
+				AA0000000000000000000005 /* FocusStatusObserver.swift in Sources */,
+				AA0000000000000000000131 /* FocusApply.swift in Sources */,
+				AA0000000000000000000006 /* FocusHarnessModel.swift in Sources */,
+				AA0000000000000000000120 /* FailedApplyNotifier.swift in Sources */,
+				AA0000000000000000000009 /* LocalCommandServer.swift in Sources */,
+				AA000000000000000000000A /* AppDelegate.swift in Sources */,
+				AA000000000000000000000B /* ApnsPushReceiver.swift in Sources */,
+				AA00000000000000000000C0 /* LanConstants.swift in Sources */,
+				AA00000000000000000000C1 /* LengthPrefixedFramer.swift in Sources */,
+				AA00000000000000000000C2 /* LanSyncGate.swift in Sources */,
+				AA00000000000000000000C3 /* LanSyncService.swift in Sources */,
+				AA00000000000000000000C4 /* dndsync_v1_dnd_state.pb.swift in Sources */,
+				AA00000000000000000000C5 /* dndsync_v1_ping.pb.swift in Sources */,
+				AA00000000000000000000CD /* dndsync_v1_cloud_envelope.pb.swift in Sources */,
+				AA0000000000000000000114 /* dndsync_v1_pair_control.pb.swift in Sources */,
+				AA000000000000000000000C /* CloudEnvelopeCodec.swift in Sources */,
+				AA000000000000000000000D /* ForwarderSecrets.swift in Sources */,
+				AA000000000000000000000E /* ForwarderSecrets.local.swift in Sources */,
+				AA000000000000000000000F /* ForwarderClient.swift in Sources */,
+				AA00000000000000000000E6 /* E2ECrypto.swift in Sources */,
+				AA00000000000000000000E7 /* PairStore.swift in Sources */,
+				AA0000000000000000000137 /* PairPorts.swift in Sources */,
+				AA0000000000000000000139 /* PairSession.swift in Sources */,
+				AA000000000000000000013F /* SyncPorts.swift in Sources */,
+				AA0000000000000000000141 /* SyncSession.swift in Sources */,
+				AA00000000000000000000E8 /* PairPayload.swift in Sources */,
+				AA00000000000000000000F2 /* ProductRouting.swift in Sources */,
+				AA0000000000000000000147 /* ProductRootView.swift in Sources */,
+				AA0000000000000000000149 /* WelcomeStepView.swift in Sources */,
+				AA000000000000000000014B /* GrantAccessStepView.swift in Sources */,
+				AA000000000000000000014D /* ShortcutsStepView.swift in Sources */,
+				AA000000000000000000014F /* LoginItemStepView.swift in Sources */,
+				AA0000000000000000000151 /* QRStepView.swift in Sources */,
+				AA0000000000000000000153 /* HomeScreen.swift in Sources */,
+				AA0000000000000000000155 /* SettingsScreen.swift in Sources */,
+				AA0000000000000000000157 /* DiagnosticsScreen.swift in Sources */,
+				AA00000000000000000000F6 /* ProductChrome.swift in Sources */,
+				AA00000000000000000000F8 /* NetworkPathMonitor.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+		AA00000000000000000000D2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA00000000000000000000C7 /* DndStateFixtureTests.swift in Sources */,
+				AA00000000000000000000FC /* ProductRoutingTests.swift in Sources */,
+				AA00000000000000000000FF /* FocusStatusObserverTests.swift in Sources */,
+				AA0000000000000000000133 /* FocusApplyTests.swift in Sources */,
+				AA0000000000000000000135 /* InMemoryFocusApply.swift in Sources */,
+				AA000000000000000000013B /* PairSessionTests.swift in Sources */,
+				AA000000000000000000013D /* PairTestDoubles.swift in Sources */,
+				AA0000000000000000000143 /* SyncSessionTests.swift in Sources */,
+				AA0000000000000000000145 /* SyncTestDoubles.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA00000000000000000000D3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA00000000000000000000D4 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA00000000000000000000C8 /* dnd_state_v1.binpb in Resources */,
+				AA00000000000000000000C9 /* cloud_envelope_v1.binpb in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+
+/* Begin PBXContainerItemProxy section */
+		AA00000000000000000000D8 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AA0000000000000000000000 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AA0000000000000000000040;
+			remoteInfo = DNDSync;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXTargetDependency section */
+		AA00000000000000000000DA /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AA0000000000000000000040 /* DNDSync */;
+			targetProxy = AA00000000000000000000D8 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		AA0000000000000000000060 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		AA0000000000000000000061 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		AA0000000000000000000062 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = DNDSync/DNDSync.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = MVSF9NZ97S;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = DNDSync/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "DND Sync";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSAppleEventsUsageDescription = "DND Sync uses Shortcuts to turn Focus on and off.";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dndsync.macos;
+				PRODUCT_NAME = DNDSync;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		AA0000000000000000000063 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = "DNDSync/DNDSync-Release.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = MVSF9NZ97S;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = DNDSync/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "DND Sync";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSAppleEventsUsageDescription = "DND Sync uses Shortcuts to turn Focus on and off.";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dndsync.macos;
+				PRODUCT_NAME = DNDSync;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		AA00000000000000000000D5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = MVSF9NZ97S;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dndsync.macosTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/DNDSync.app/Contents/MacOS/DNDSync";
+			};
+			name = Debug;
+		};
+		AA00000000000000000000D6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = MVSF9NZ97S;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dndsync.macosTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/DNDSync.app/Contents/MacOS/DNDSync";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		AA0000000000000000000050 /* Build configuration list for PBXProject "DNDSync" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA0000000000000000000060 /* Debug */,
+				AA0000000000000000000061 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AA0000000000000000000052 /* Build configuration list for PBXNativeTarget "DNDSync" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA0000000000000000000062 /* Debug */,
+				AA0000000000000000000063 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AA00000000000000000000D7 /* Build configuration list for PBXNativeTarget "DNDSyncTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA00000000000000000000D5 /* Debug */,
+				AA00000000000000000000D6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		AA00000000000000000000A0 /* XCRemoteSwiftPackageReference "swift-protobuf" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-protobuf.git";
+			requirement = {
+				kind = upToNextMinorVersion;
+				minimumVersion = 1.28.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		AA00000000000000000000A1 /* SwiftProtobuf */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AA00000000000000000000A0 /* XCRemoteSwiftPackageReference "swift-protobuf" */;
+			productName = SwiftProtobuf;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = AA0000000000000000000000 /* Project object */;
+}

@@ -1,0 +1,95 @@
+# Contributing
+
+CI, release, and signing live here. Day-to-day build, test, and live-check
+commands are in [AGENTS.md](AGENTS.md). The consumer install path is
+[README.md](README.md).
+
+## CI
+
+`.github/workflows/ci.yml` runs on every pull request: a Linux job (proto +
+`buf lint` + Android unit tests + forwarder typecheck/tests, `npm ci`) and a
+macOS job (`test-mac`, unsigned, `CODE_SIGNING_ALLOWED=NO`). Neither job
+touches a real device, sends a real push, or runs `firebase deploy`. Those
+stay the manual [Live checks](AGENTS.md#live-checks) until off-LAN CD is an
+explicit, OIDC-gated decision. Once this repository has a GitHub remote,
+turn on required status checks for both jobs under branch protection so
+`main` can't merge red.
+
+`.github/workflows/release.yml` is a separate, more privileged workflow.
+See [Ship](#ship) below. It only ever runs on a version-tag push, never on
+a pull request, so a fork PR can't reach its signing secrets.
+
+## Ship
+
+This is the **dogfood** path: a notarized Mac `.dmg` and a signed Android
+`.apk`, built and attached to a GitHub Release automatically when you push a
+version tag. It does not cover the App Store or a Play Store listing. Those
+need their own store-listing/review work on top of this.
+
+### One-time setup
+
+1. Build the signing material locally first. This proves it works before
+   CI ever touches it, and CI reuses these exact files and passwords:
+   - A Developer ID Application certificate for the team in
+     `apps/macos/ExportOptions-DeveloperID.plist` (`teamID`) in your
+     keychain (Xcode → Settings → Accounts → Manage Certificates).
+   - Notarization credentials, stored once in the keychain (`<team-id>` is
+     the same `teamID` from that plist):
+     `xcrun notarytool store-credentials dndsync-notary --apple-id you@example.com --team-id <team-id> --password <app-specific password>`
+     (the app-specific password comes from
+     [appleid.apple.com](https://appleid.apple.com)).
+   - `make android-keystore` generates `apps/android/release.keystore.jks`
+     once and writes its password into `apps/android/local.properties`
+     (gitignored). **Back up the `.jks` file and that password somewhere
+     safe.** Lose them and no future release can update an existing
+     install without users uninstalling first.
+   - Try both locally end to end: `make dmg-mac` and
+     `make build-android-release`.
+2. Export that same signing material as repo secrets so
+   `.github/workflows/release.yml` can reuse it. The comment block at the
+   top of that file spells out exactly which secret holds what and how to
+   produce it (`MACOS_CERTIFICATE_P12_BASE64`, `MACOS_CERTIFICATE_PASSWORD`,
+   `MACOS_KEYCHAIN_PASSWORD`, `APPLE_TEAM_ID`, `NOTARY_APPLE_ID`,
+   `NOTARY_APP_SPECIFIC_PASSWORD`, `ANDROID_KEYSTORE_BASE64`,
+   `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`).
+3. Create a GitHub **Environment** named `release` (repo Settings →
+   Environments) and add yourself as a **required reviewer**. Every release
+   run then pauses for a manual approval before it can touch any secret.
+   A compromised token or Action still can't ship silently.
+
+### Every release
+
+1. `make bump-version VERSION=0.2.0`, review the diff, commit.
+2. Redeploy the forwarder first if this release touches it (`make deploy`).
+   Old and new clients must both keep working against it.
+3. `git tag v0.2.0 && git push --tags`. The only thing that starts
+   `release.yml`. It never runs on a pull request, so a fork PR can't reach
+   the secrets above; only someone who can push a tag to this repo can.
+4. Approve the `release` environment on the Actions run when prompted. The
+   workflow then archives, notarizes, and staples the Mac app, packages the
+   `.dmg`, signs the Android `.apk`, and publishes both as assets on a new
+   GitHub Release named after the tag.
+
+`make dmg-mac` / `make build-android-release` still work standalone anytime
+you want a local build without pushing a tag. CI runs those exact targets,
+just with secrets instead of your keychain/`local.properties`.
+
+### Two things that break silently if skipped
+
+- The Release build uses `DNDSync-Release.entitlements`
+  (`aps-environment: production`), not the Debug entitlements
+  (`development`). A production APNs token only works if the forwarder's
+  `APNS_HOST` secret is also `https://api.push.apple.com`, not the sandbox
+  host. Don't flip one without the other.
+- A release-signed Android build uses a different certificate than the debug
+  keystore Android Studio uses, so **Firebase needs this release keystore's
+  SHA-1/SHA-256 fingerprints added too** (`keytool -list -v -keystore
+  apps/android/release.keystore.jks`, then Firebase console → Project
+  settings → your Android app) or FCM silently stops working in release
+  builds only.
+
+Not automated on purpose: creating the Developer ID certificate and Apple ID
+app-specific password themselves, the Android keystore's key material
+(generated once, yours to safeguard), the `release` environment's reviewer
+list, and any Play Console / App Store listing work. Those stay one-time,
+human, account-bound steps.

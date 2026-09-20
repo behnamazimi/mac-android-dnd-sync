@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Code only: proto lint/generate, Android unit tests, forwarder typecheck +
+# unit tests, then Mac unit tests unsigned. No FCM/APNs/LAN/Focus, no
+# `firebase deploy`, no device. Those stay a human checklist (AGENTS.md
+# "Live checks"). See AGENTS.md and the DevX automation inventory plan.
+jobs:
+  linux:
+    name: Proto + Android + Forwarder (Linux)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: bufbuild/buf-setup-action@v1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Android unit tests (proto + buf lint run as a Gradle dependency)
+        run: make test-android
+
+      - name: Forwarder typecheck + unit tests
+        run: make test-forwarder
+
+  macos:
+    name: Mac unit tests (unsigned)
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: bufbuild/buf-setup-action@v1
+
+      - name: Generate protobuf stubs
+        run: ./scripts/generate-proto.sh
+
+      - name: xcodebuild test (no signing identity, no device)
+        run: |
+          xcodebuild -project apps/macos/DNDSync.xcodeproj -scheme DNDSync \
+            -configuration Debug -destination 'platform=macOS' test \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO

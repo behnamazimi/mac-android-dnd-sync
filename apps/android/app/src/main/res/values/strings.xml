@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">DND Sync</string>
+    <string name="failed_off_channel_name">Sync issues</string>
+    <string name="failed_off_channel_description">Alerts when Do Not Disturb didn\'t turn off</string>
+    <string name="failed_off_title">Couldn\'t turn Do Not Disturb off</string>
+    <string name="failed_off_body">This phone kept it on. Open Modes to turn it off.</string>
+    <string name="zen_rule_name">DND Sync</string>
+    <string name="camera_rationale">DND Sync uses the camera only to scan the code on your Mac.</string>
+</resources>

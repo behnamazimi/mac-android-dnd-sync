@@ -1,0 +1,23 @@
+{
+  "functions": [
+    {
+      "source": "forwarder",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "*.local",
+        ".env"
+      ],
+      "predeploy": [
+        "FORCE_PROTO=1 \"$RESOURCE_DIR/../scripts/generate-proto.sh\"",
+        "\"$RESOURCE_DIR/node_modules/.bin/tsc\" -p \"$RESOURCE_DIR/tsconfig.json\""
+      ],
+      "runtime": "nodejs22"
+    }
+  ],
+  "firestore": {
+    "rules": "forwarder/firestore.rules"
+  }
+}

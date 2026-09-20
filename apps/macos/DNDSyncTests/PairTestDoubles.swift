@@ -1,0 +1,70 @@
+import Foundation
+@testable import DNDSync
+
+final class InMemoryPairStore: PairStoring {
+    var stored: PersistedPair?
+
+    func load() -> PersistedPair? { stored }
+    func save(_ pair: PersistedPair) { stored = pair }
+    func clear() { stored = nil }
+}
+
+final class FakePairForwarder: PairForwarder {
+    var devices: [ForwarderDevice] = []
+    var created = false
+    var deleted = false
+    var envelopes: [Data] = []
+    var registeredTokens: [String] = []
+    var error: Error?
+
+    func registerDevice(
+        baseURL: String,
+        pairId: String,
+        secret: String,
+        sender: String,
+        platform: String,
+        token: String,
+        e2ePublicKey: String?
+    ) async throws {
+        if let error { throw error }
+        registeredTokens.append(token)
+    }
+
+    func createPair(
+        baseURL: String,
+        appKey: String,
+        pairId: String,
+        secretHash: String,
+        sender: String,
+        platform: String,
+        token: String,
+        e2ePublicKey: String?
+    ) async throws {
+        if let error { throw error }
+        created = true
+    }
+
+    func listDevices(
+        baseURL: String,
+        pairId: String,
+        secret: String
+    ) async throws -> [ForwarderDevice] {
+        if let error { throw error }
+        return devices
+    }
+
+    func postEnvelope(
+        baseURL: String,
+        pairId: String,
+        secret: String,
+        envelope: Data
+    ) async throws {
+        if let error { throw error }
+        envelopes.append(envelope)
+    }
+
+    func deletePair(baseURL: String, pairId: String, secret: String) async throws {
+        if let error { throw error }
+        deleted = true
+    }
+}

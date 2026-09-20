@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>DND Sync finds your phone on this Wi-Fi so they can sync without the internet.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<!-- Must match LanConstants.serviceType -->
+		<string>_dndsync._tcp</string>
+	</array>
+</dict>
+</plist>

@@ -1,0 +1,6 @@
+{
+  "version": 1,
+  "pair_id": "dndsync-dev",
+  "sender": "mac",
+  "ciphertext": "bytes of proto/fixtures/dnd_state_v1.binpb"
+}

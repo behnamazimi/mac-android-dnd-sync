@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package dndsync.v1;
+
+option java_package = "com.dndsync.proto.v1";
+option java_multiple_files = true;
+
+message PairControl {
+  uint32 version = 1;
+  Kind kind = 2;
+  string pair_id = 3;
+  int64 unix_ms = 4;
+
+  enum Kind {
+    KIND_UNSPECIFIED = 0;
+    KIND_UNPAIR = 1;
+  }
+}
