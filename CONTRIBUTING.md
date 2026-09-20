@@ -50,8 +50,12 @@ need their own store-listing/review work on top of this.
    top of that file spells out exactly which secret holds what and how to
    produce it (`MACOS_CERTIFICATE_P12_BASE64`, `MACOS_CERTIFICATE_PASSWORD`,
    `MACOS_KEYCHAIN_PASSWORD`, `APPLE_TEAM_ID`, `NOTARY_APPLE_ID`,
-   `NOTARY_APP_SPECIFIC_PASSWORD`, `ANDROID_KEYSTORE_BASE64`,
-   `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`).
+   `NOTARY_APP_SPECIFIC_PASSWORD`, `MACOS_PROVISIONING_PROFILE_BASE64`,
+   `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`,
+   `ANDROID_KEY_ALIAS`). Push Notifications on the Mac app means CI also
+   needs a **Developer ID** provisioning profile for `com.dndsync.macos`
+   (Apple Developer → Profiles → Developer ID). Encode it with
+   `base64 -i Profile.provisionprofile | pbcopy`.
 3. Create a GitHub **Environment** named `release` (repo Settings →
    Environments) and add yourself as a **required reviewer**. Every release
    run then pauses for a manual approval before it can touch any secret.

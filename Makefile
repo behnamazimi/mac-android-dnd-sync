@@ -11,9 +11,14 @@ CMD ?= on
 P8 ?= scripts/apns-send/AuthKey.p8
 VERSION ?=
 NOTARY_PROFILE ?= dndsync-notary
+MAC_TEAM_ID := MVSF9NZ97S
 MAC_BUILD_DIR := build/mac
 MAC_ARCHIVE := $(MAC_BUILD_DIR)/DNDSync.xcarchive
 MAC_EXPORT := $(MAC_BUILD_DIR)/export
+EXPORT_OPTIONS_PLIST := apps/macos/ExportOptions-DeveloperID.plist
+ifeq ($(CI),true)
+EXPORT_OPTIONS_PLIST := apps/macos/ExportOptions-DeveloperID-CI.plist
+endif
 ANDROID_KEYSTORE ?= apps/android/release.keystore.jks
 ANDROID_KEY_ALIAS ?= dndsync-release
 
@@ -307,14 +312,29 @@ release-check:
 
 archive-mac:
 	rm -rf $(MAC_ARCHIVE)
-	xcodebuild -project apps/macos/DNDSync.xcodeproj -scheme DNDSync \
-		-configuration Release -archivePath $(MAC_ARCHIVE) archive
+	@if [ -n "$${CI:-}" ]; then \
+		test -n "$${MACOS_PROFILE_SPECIFIER:-}" || { \
+			printf 'CI archive needs MACOS_PROFILE_SPECIFIER. Set MACOS_PROVISIONING_PROFILE_BASE64 on the release environment.\n' >&2; \
+			exit 1; \
+		}; \
+		xcodebuild -project apps/macos/DNDSync.xcodeproj -scheme DNDSync \
+			-configuration Release -destination 'generic/platform=macOS' \
+			-archivePath $(MAC_ARCHIVE) archive \
+			CODE_SIGN_STYLE=Manual \
+			CODE_SIGN_IDENTITY="Developer ID Application" \
+			DEVELOPMENT_TEAM=$(MAC_TEAM_ID) \
+			PROVISIONING_PROFILE_SPECIFIER="$$MACOS_PROFILE_SPECIFIER"; \
+	else \
+		xcodebuild -project apps/macos/DNDSync.xcodeproj -scheme DNDSync \
+			-configuration Release -destination 'generic/platform=macOS' \
+			-archivePath $(MAC_ARCHIVE) archive; \
+	fi
 
 export-mac: archive-mac
 	rm -rf $(MAC_EXPORT)
 	xcodebuild -exportArchive -archivePath $(MAC_ARCHIVE) \
 		-exportPath $(MAC_EXPORT) \
-		-exportOptionsPlist apps/macos/ExportOptions-DeveloperID.plist
+		-exportOptionsPlist $(EXPORT_OPTIONS_PLIST)
 
 notarize-mac: export-mac
 	@ditto -c -k --keepParent "$(MAC_EXPORT)/DNDSync.app" "$(MAC_BUILD_DIR)/DNDSync-notarize.zip"
@@ -341,8 +361,11 @@ dmg-mac: notarize-mac
 ship-mac: dmg-mac
 
 android-keystore:
-	@if [ -f "$(ANDROID_KEYSTORE)" ]; then printf '%s already exists\n' "$(ANDROID_KEYSTORE)"; exit 0; fi
-	@pass="$$(openssl rand -base64 24)"; \
+	@if [ -f "$(ANDROID_KEYSTORE)" ]; then \
+		printf '%s already exists\n' "$(ANDROID_KEYSTORE)"; \
+		exit 0; \
+	fi; \
+	pass="$$(openssl rand -base64 24)"; \
 	keytool -genkeypair -v -keystore "$(ANDROID_KEYSTORE)" \
 		-alias $(ANDROID_KEY_ALIAS) -keyalg RSA -keysize 2048 -validity 10000 \
 		-storepass "$$pass" -keypass "$$pass" \
@@ -355,7 +378,11 @@ android-keystore:
 	printf 'Back both up somewhere safe — losing them means future releases can never\n'; \
 	printf 'update this same install without users uninstalling first.\n'
 
-build-android-release: android-keystore
+build-android-release:
+	@if [ ! -f "$(ANDROID_KEYSTORE)" ]; then \
+		printf 'Missing %s. Run make android-keystore once, or restore it in CI from secrets.\n' "$(ANDROID_KEYSTORE)" >&2; \
+		exit 1; \
+	fi
 	cd apps/android && ./gradlew :app:assembleRelease
 	@printf 'Signed APK: apps/android/app/build/outputs/apk/release/app-release.apk\n'
 
