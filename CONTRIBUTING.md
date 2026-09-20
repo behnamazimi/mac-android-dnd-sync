@@ -8,12 +8,12 @@ commands are in [AGENTS.md](AGENTS.md). The consumer install path is
 
 `.github/workflows/ci.yml` runs on every pull request: a Linux job (proto +
 `buf lint` + Android unit tests + forwarder typecheck/tests, `npm ci`) and a
-macOS job (`test-mac`, unsigned, `CODE_SIGNING_ALLOWED=NO`). Neither job
-touches a real device, sends a real push, or runs `firebase deploy`. Those
-stay the manual [Live checks](AGENTS.md#live-checks) until off-LAN CD is an
-explicit, OIDC-gated decision. Once this repository has a GitHub remote,
-turn on required status checks for both jobs under branch protection so
-`main` can't merge red.
+macOS job (`test-mac`, unsigned, `CODE_SIGNING_ALLOWED=NO`) on GitHub's
+`macos-26` runner. Neither job touches a real device, sends a real push,
+or runs `firebase deploy`. Those stay the manual
+[Live checks](AGENTS.md#live-checks) until off-LAN CD is an explicit,
+OIDC-gated decision. Turn on required status checks for both jobs under
+branch protection so `main` can't merge red.
 
 `.github/workflows/release.yml` is a separate, more privileged workflow.
 See [Ship](#ship) below. It only ever runs on a version-tag push, never on
