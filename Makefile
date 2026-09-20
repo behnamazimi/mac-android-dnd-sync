@@ -27,7 +27,7 @@ export PATH := /opt/homebrew/bin:/usr/local/bin:$(PATH)
 
 .PHONY: help doctor bootstrap proto \
 	install-forwarder install-fcm build-forwarder \
-	secrets-print secrets-local-mac secrets-apns-p8 secrets-set \
+	secrets-print secrets-local-mac secrets-release-mac secrets-apns-p8 secrets-set \
 	test test-mac test-android test-forwarder \
 	build-mac build-android \
 	loopback-on loopback-off \
@@ -51,6 +51,7 @@ help:
 		'  install-fcm           npm ci (or install) in scripts/fcm-send/' \
 		'  secrets-print         Print a new pair_secret, hash, and app key' \
 		'  secrets-local-mac     Copy ForwarderSecrets.local.swift from the example' \
+		'  secrets-release-mac   Require non-empty baseURL+appKey (CI writes from env)' \
 		'  secrets-set           Prompt for the 5 remaining Function secrets (never echoed)' \
 		'  secrets-apns-p8       Set APNS_P8 from $(P8) (then make deploy)' \
 		'' \
@@ -184,6 +185,14 @@ secrets-local-mac:
 			apps/macos/DNDSync/ForwarderSecrets.local.swift
 	@printf 'Edit apps/macos/DNDSync/ForwarderSecrets.local.swift\n'
 
+# Release archives must be able to POST /v1/pairs. CI has no gitignored
+# ForwarderSecrets.local.swift, so Xcode would copy the empty example and
+# the shipped QR step would only say "check the internet." Local archives
+# reuse the filled-in file; CI writes it from FORWARDER_APP_KEY (URL
+# defaults to FUNCTION_URL). Values are never printed.
+secrets-release-mac:
+	FUNCTION_URL="$(FUNCTION_URL)" ./scripts/ensure-mac-forwarder-secrets.sh
+
 secrets-apns-p8:
 	@test -f "$(P8)" || { printf 'Missing %s\n' "$(P8)" >&2; exit 1; }
 	firebase functions:secrets:set APNS_P8 --project $(PROJECT) < "$(P8)"
@@ -315,7 +324,7 @@ release-check:
 # resource bundle then fails with "does not support provisioning profiles."
 # Write the profile onto the DNDSync target only (Signing.xcconfig includes
 # this file). Local archives keep Automatic signing when the file is absent.
-archive-mac:
+archive-mac: secrets-release-mac
 	rm -rf $(MAC_ARCHIVE)
 	@if [ -n "$${CI:-}" ]; then \
 		test -n "$${MACOS_PROFILE_SPECIFIER:-}" || { \
@@ -353,6 +362,10 @@ export-mac: archive-mac
 	xcodebuild -exportArchive -archivePath $(MAC_ARCHIVE) \
 		-exportPath $(MAC_EXPORT) \
 		-exportOptionsPlist "$$plist"
+	@if ! strings "$(MAC_EXPORT)/DNDSync.app/Contents/MacOS/DNDSync" | grep -Fq "$(FUNCTION_URL)"; then \
+		printf 'Exported app is missing the forwarder URL — pairing cannot start.\n' >&2; \
+		exit 1; \
+	fi
 
 notarize-mac: export-mac
 	@ditto -c -k --keepParent "$(MAC_EXPORT)/DNDSync.app" "$(MAC_BUILD_DIR)/DNDSync-notarize.zip"

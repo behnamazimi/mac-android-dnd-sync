@@ -52,17 +52,30 @@ need their own store-listing/review work on top of this.
    `MACOS_KEYCHAIN_PASSWORD`, `APPLE_TEAM_ID`, `NOTARY_APPLE_ID`,
    `NOTARY_APP_SPECIFIC_PASSWORD`, `MACOS_PROVISIONING_PROFILE_BASE64`,
    `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`,
-   `ANDROID_KEY_ALIAS`). Push Notifications on the Mac app means CI also
-   needs a **Developer ID** provisioning profile for `com.dndsync.macos`
-   (Apple Developer → Profiles → Developer ID). Encode it with
-   `base64 -i Profile.provisionprofile | pbcopy`. CI writes that profile
-   name into `apps/macos/DNDSync/CI-signing.xcconfig` (included only by the
-   DNDSync Release target) rather than an `xcodebuild` override, so
-   SwiftProtobuf is not asked to use a provisioning profile it doesn't
-   support. The same name is injected into a copy of
+   `ANDROID_KEY_ALIAS`, `FORWARDER_APP_KEY`,
+   `ANDROID_GOOGLE_SERVICES_JSON_BASE64`). Push Notifications on the Mac
+   app means CI also needs a **Developer ID** provisioning profile for
+   `com.dndsync.macos` (Apple Developer → Profiles → Developer ID). Encode
+   it with `base64 -i Profile.provisionprofile | pbcopy`. CI writes that
+   profile name into `apps/macos/DNDSync/CI-signing.xcconfig` (included
+   only by the DNDSync Release target) rather than an `xcodebuild`
+   override, so SwiftProtobuf is not asked to use a provisioning profile
+   it doesn't support. The same name is injected into a copy of
    `ExportOptions-DeveloperID-CI.plist` at export time; without that
    mapping, `exportArchive` fails with "requires a provisioning profile
    with the Push Notifications feature."
+
+   The Mac QR step creates a pair against the live forwarder, so the
+   Release binary needs the same `appKey` you already have in
+   `ForwarderSecrets.local.swift`. Add it as `FORWARDER_APP_KEY` (optional
+   `FORWARDER_BASE_URL` if you are not on the default
+   `europe-west1-dnd-sync-2a05c` URL). Without it, CI used to copy the
+   empty example file and ship a DMG whose QR step only said "Couldn't
+   start pairing. Check the internet." `make dmg-mac` now fails closed if
+   those fields are empty. Encode the Android Firebase config the same
+   way: `base64 -i apps/android/app/google-services.json | pbcopy` into
+   `ANDROID_GOOGLE_SERVICES_JSON_BASE64`, or the release APK never
+   registers FCM.
 3. Create a GitHub **Environment** named `release` (repo Settings →
    Environments) and add yourself as a **required reviewer**. Every release
    run then pauses for a manual approval before it can touch any secret.
@@ -92,7 +105,7 @@ you want a local build without pushing a tag. CI runs those exact targets,
 just with secrets instead of your keychain/`local.properties`. Run
 `make release-check` to verify the version files already match.
 
-### Two things that break silently if skipped
+### Things that break the ship if skipped
 
 - The Release build uses `DNDSync-Release.entitlements`
   (`aps-environment: production`), not the Debug entitlements
@@ -105,6 +118,11 @@ just with secrets instead of your keychain/`local.properties`. Run
   apps/android/release.keystore.jks`, then Firebase console → Project
   settings → your Android app) or FCM silently stops working in release
   builds only.
+- `FORWARDER_APP_KEY` and `ANDROID_GOOGLE_SERVICES_JSON_BASE64` are not
+  signing secrets. Skip them and the GitHub-built `.dmg` cannot start
+  pairing (empty `ForwarderSecrets.local.swift`) and the `.apk` cannot
+  register FCM. `make dmg-mac` / the Android restore step now fail the
+  job instead of shipping that. You still have to add the secrets once.
 
 Not automated on purpose: creating the Developer ID certificate and Apple ID
 app-specific password themselves, the Android keystore's key material

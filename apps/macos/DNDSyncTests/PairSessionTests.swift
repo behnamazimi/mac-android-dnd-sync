@@ -30,6 +30,24 @@ final class PairSessionTests: XCTestCase {
         XCTAssertNotNil(store.stored?.peerPublicKeyB64)
     }
 
+    func testCreateWithoutAppKeyShowsRetryNotInternetCall() async {
+        let forwarder = FakePairForwarder()
+        let session = PairSession(
+            forwarder: forwarder,
+            store: InMemoryPairStore(),
+            secrets: PairSecretsSource(baseURL: "", appKey: ""),
+            apnsToken: { "token-hex" },
+            deviceName: { "Test Mac" }
+        )
+
+        await session.create()
+
+        XCTAssertFalse(forwarder.created)
+        XCTAssertTrue(session.qrNeedsRetry)
+        XCTAssertEqual(session.qrMessage, ProductCopy.createPairFailed)
+        XCTAssertFalse(session.createdPairForCurrentId)
+    }
+
     func testStartPeerPollJoinsWithoutManualRefresh() async {
         let forwarder = FakePairForwarder()
         let store = InMemoryPairStore()

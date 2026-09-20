@@ -76,6 +76,8 @@ values from the console or teammate that owns that account, never from this
 repo:
 
 - `apps/android/app/google-services.json` — Firebase Android app config.
+  A missing file still debug-builds; FCM stays unregistered. The GitHub
+  Release APK restores it from `ANDROID_GOOGLE_SERVICES_JSON_BASE64`.
 - `scripts/fcm-send/firebase-service-account.json` — Admin SDK key for the
   FCM diagnostic script.
 - `scripts/apns-send/AuthKey.p8` — APNs signing key for the diagnostic
@@ -83,8 +85,11 @@ repo:
 - `apps/macos/DNDSync/ForwarderSecrets.local.swift` — Mac's forwarder URL,
   app key, and (once created) pair secret. Xcode copies it from the
   `.example` file automatically on first build; `make secrets-local-mac`
-  does the same from the command line. Empty fields still compile. The app
-  shows "missing ForwarderSecrets.local.swift" in Settings/Diagnostics
+  does the same from the command line. Empty fields still compile, and the
+  QR step then only says "Couldn't start pairing. Check the internet."
+  `make dmg-mac` refuses to archive until `baseURL` and `appKey` are set
+  (`make secrets-release-mac`; CI writes them from `FORWARDER_APP_KEY`).
+  Diagnostics (debug builds) shows "missing ForwarderSecrets.local.swift"
   until you fill it in.
 
 Android has no forwarder secrets of its own. It never reads
@@ -208,8 +213,10 @@ one notification per incident and opens Modes settings.
 
 ## If you're stuck
 
-- Empty `ForwarderSecrets.local.swift` values still compile; the cloud path
-  just stays disabled until you fill them in.
+- Empty `ForwarderSecrets.local.swift` values still compile; the QR step
+  then only says "Couldn't start pairing. Check the internet." Fill in
+  `baseURL` and `appKey`. `make dmg-mac` refuses to archive until they
+  are set.
 - A missing `google-services.json` still builds the Android app; the Google
   services Gradle plugin only applies when that file exists, so FCM stays
   unregistered until you add it and rebuild.
