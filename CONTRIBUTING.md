@@ -55,7 +55,11 @@ need their own store-listing/review work on top of this.
    `ANDROID_KEY_ALIAS`). Push Notifications on the Mac app means CI also
    needs a **Developer ID** provisioning profile for `com.dndsync.macos`
    (Apple Developer → Profiles → Developer ID). Encode it with
-   `base64 -i Profile.provisionprofile | pbcopy`.
+   `base64 -i Profile.provisionprofile | pbcopy`. CI writes that profile
+   name into `apps/macos/DNDSync/CI-signing.xcconfig` (included only by the
+   DNDSync Release target) rather than an `xcodebuild` override, so
+   SwiftProtobuf is not asked to use a provisioning profile it doesn't
+   support.
 3. Create a GitHub **Environment** named `release` (repo Settings →
    Environments) and add yourself as a **required reviewer**. Every release
    run then pauses for a manual approval before it can touch any secret.
