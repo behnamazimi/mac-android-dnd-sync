@@ -415,6 +415,6 @@ build-android-release:
 		exit 1; \
 	fi
 	cd apps/android && ./gradlew :app:assembleRelease
-	@printf 'Signed APK: apps/android/app/build/outputs/apk/release/app-release.apk\n'
+	@printf 'Signed APK: %s\n' apps/android/app/build/outputs/apk/release/DNDSync-*.apk
 
 ship-android: build-android-release
