@@ -96,9 +96,9 @@ PR cannot reach the secrets above.
 2. From a clean `main`: `make release VERSION=0.1.0`. `DRY_RUN=1` prints
    the plan without writing, and `NO_PUSH=1` commits and tags locally.
 3. Approve the `release` environment on the Actions run when prompted. The
-   workflow then archives, notarizes, and staples the Mac app, packages the
-   `.dmg`, signs the Android `.apk`, and publishes both as assets on a new
-   GitHub Release named after the tag.
+   workflow then archives, notarizes, and staples the Mac app, packages a
+   compact Applications-drop `.dmg`, signs the Android `.apk`, and
+   publishes both as assets on a new GitHub Release named after the tag.
 
 `make dmg-mac` / `make build-android-release` still work standalone anytime
 you want a local build without pushing a tag. CI runs those exact targets,

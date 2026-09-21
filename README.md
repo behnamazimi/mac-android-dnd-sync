@@ -33,7 +33,7 @@ Pair both devices, then flip Focus. Status shows **Paired** when it worked.
 
 The Mac app is a menu-bar extra with no Dock icon.
 
-1. Open the `.dmg`, put **DND Sync** in Applications, and launch it.
+1. Open the `.dmg`, drag **DND Sync** onto **Applications**, and launch it.
 2. Click the icon and finish the wizard: allow Shortcuts and notifications,
    add **DND Sync On** and **DND Sync Off**, then optionally **Open at
    login**.

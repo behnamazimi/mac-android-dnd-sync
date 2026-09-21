@@ -35,6 +35,7 @@ protocol SyncPairing: AnyObject {
     func open(_ ciphertext: Data) -> Data?
     func persistLastSync(unixMs: Int64, on: Bool, sender: String, viaLan: Bool)
     func handleInboundUnpair(_ control: Dndsync_V1_PairControl)
+    func refreshPairOrUnpair() async
     func noteCloudUnauthorized()
     func noteCloudError(_ message: String)
     func noteCloudSuccess()

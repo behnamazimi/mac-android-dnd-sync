@@ -104,6 +104,16 @@ android {
     }
 }
 
+// GitHub Release asset is DNDSync-<version>.apk (versionName, no -release suffix).
+android.applicationVariants.configureEach {
+    if (buildType.name != "release") return@configureEach
+    val releaseName = "DNDSync-$versionName.apk"
+    outputs.configureEach {
+        (this as com.android.build.gradle.internal.api.BaseVariantOutputImpl)
+            .outputFileName = releaseName
+    }
+}
+
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

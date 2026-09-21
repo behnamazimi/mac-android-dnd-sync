@@ -67,6 +67,18 @@ struct SettingsScreen: View {
                             NSWorkspace.shared.open(Distribution.githubReleases)
                         }
                     }
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(ProductCopy.seeSourceOnGitHub)
+                            Text(ProductCopy.starIfItHelps)
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        Button(ProductCopy.openEllipsis) {
+                            NSWorkspace.shared.open(Distribution.githubRepo)
+                        }
+                    }
                 }
                 #if DEBUG
                 Section(ProductCopy.advanced) {

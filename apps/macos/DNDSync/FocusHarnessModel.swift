@@ -173,6 +173,7 @@ final class FocusHarnessModel {
         pair.onJoined = { [weak self] in
             self?.readyAtSessionStart = true
             self?.sync.startLANIfJoined()
+            self?.pair.startPairedWatch()
         }
         pair.onCleared = { [weak self] in
             self?.sync.stopLAN()
@@ -252,6 +253,7 @@ final class FocusHarnessModel {
         }
         if pair.joined {
             sync.startLANIfJoined()
+            pair.startPairedWatch()
         }
         readyAtSessionStart = paired
         refreshOffline()
@@ -405,6 +407,9 @@ final class FocusHarnessModel {
         focusApply.noteBecameActive()
         if destination == .shortcuts || destination == .automation || paired {
             probeShortcuts(showMissing: destination == .shortcuts)
+        }
+        if paired {
+            Task { await pair.refreshPairOrUnpair() }
         }
         handleDestination(destination)
     }

@@ -33,7 +33,8 @@ export PATH := /opt/homebrew/bin:/usr/local/bin:$(PATH)
 	loopback-on loopback-off \
 	apns apns-on apns-off fcm fcm-on fcm-off \
 	health smoke logs deploy deploy-rules firebase-use \
-	release release-check archive-mac export-mac notarize-mac dmg-mac ship-mac \
+	release release-check archive-mac export-mac notarize-mac package-mac-dmg \
+	dmg-mac ship-mac \
 	android-keystore build-android-release ship-android
 
 help:
@@ -96,6 +97,7 @@ help:
 		'  notarize-mac                Submit to Apple + wait + staple (needs one-time' \
 		'                               xcrun notarytool store-credentials $(NOTARY_PROFILE))' \
 		'  dmg-mac                     archive → export → notarize → build/mac/*.dmg' \
+		'  package-mac-dmg             Re-pack build/mac/export/DNDSync.app (no notarize)' \
 		'  ship-mac                    Alias for dmg-mac' \
 		'  android-keystore            Generate apps/android/release.keystore.jks (once)' \
 		'  build-android-release       android-keystore + assembleRelease (signed APK)' \
@@ -135,6 +137,8 @@ doctor:
 		if [ "$$empties" -gt 0 ]; then printf '[warn] ForwarderSecrets.local.swift has %s empty field(s) — it compiles, but Mac cloud path stays disabled\n' "$$empties"; warn=1; fi; \
 	fi; \
 	printf '\nShip readiness (only needed for make dmg-mac / build-android-release — never blocks doctor):\n'; \
+	if command -v python3 >/dev/null 2>&1; then printf '[ok]   python3 (dmg-mac packages with dmgbuild)\n'; \
+	else printf '[--]   python3 missing — dmg-mac needs it to run dmgbuild\n'; fi; \
 	printf '[--]   notarytool credential profile "%s" — no reliable way to check presence here;\n' "$(NOTARY_PROFILE)"; \
 	printf '       if dmg-mac fails at the submit step, run: xcrun notarytool store-credentials %s ...\n' "$(NOTARY_PROFILE)"; \
 	if [ -f "$(ANDROID_KEYSTORE)" ]; then printf '[ok]   %s present\n' "$(ANDROID_KEYSTORE)"; \
@@ -380,14 +384,18 @@ notarize-mac: export-mac
 	xcrun stapler staple "$(MAC_EXPORT)/DNDSync.app"
 	@rm -f "$(MAC_BUILD_DIR)/DNDSync-notarize.zip"
 
-dmg-mac: notarize-mac
+package-mac-dmg:
+	@test -d "$(MAC_EXPORT)/DNDSync.app" || { \
+		printf 'Missing %s. Run make export-mac (or make dmg-mac) first.\n' \
+			"$(MAC_EXPORT)/DNDSync.app" >&2; \
+		exit 1; \
+	}
 	@version="$$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' \
 		"$(MAC_EXPORT)/DNDSync.app/Contents/Info.plist")"; \
 	name="Mac-Android-DND-Sync-$$version.dmg"; \
-	rm -f "$(MAC_BUILD_DIR)/$$name"; \
-	hdiutil create -volname "DND Sync" -srcfolder "$(MAC_EXPORT)/DNDSync.app" \
-		-ov -format UDZO "$(MAC_BUILD_DIR)/$$name"; \
-	printf 'Built %s/%s\n' "$(MAC_BUILD_DIR)" "$$name"
+	./scripts/package-mac-dmg.sh "$(MAC_EXPORT)/DNDSync.app" "$(MAC_BUILD_DIR)/$$name"
+
+dmg-mac: notarize-mac package-mac-dmg
 
 ship-mac: dmg-mac
 
@@ -415,6 +423,6 @@ build-android-release:
 		exit 1; \
 	fi
 	cd apps/android && ./gradlew :app:assembleRelease
-	@printf 'Signed APK: apps/android/app/build/outputs/apk/release/app-release.apk\n'
+	@printf 'Signed APK: %s\n' apps/android/app/build/outputs/apk/release/DNDSync-*.apk
 
 ship-android: build-android-release

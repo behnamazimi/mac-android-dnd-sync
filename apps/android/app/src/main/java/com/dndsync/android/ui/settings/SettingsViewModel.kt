@@ -11,6 +11,7 @@ import com.dndsync.android.pair.PairSession
 import com.dndsync.android.sync.SyncSession
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,6 +21,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -68,8 +70,12 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun unpair() {
-        pairSession.unpair(notifyPeer = true)
-        viewModelScope.launch { events.send(SettingsEvent.Unpaired) }
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                pairSession.unpair(notifyPeer = true)
+            }
+            events.send(SettingsEvent.Unpaired)
+        }
     }
 
     private fun hasPermission(permission: String): Boolean =

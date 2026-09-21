@@ -89,6 +89,39 @@ final class PairSessionTests: XCTestCase {
         XCTAssertFalse(session.joined)
     }
 
+    func testUnpairNotifiesPeerWhenJoined() {
+        let session = joinedSession(forwarder: FakePairForwarder(), store: InMemoryPairStore())
+        var notified: UnpairContext?
+        session.onNotifyPeerUnpair = { notified = $0 }
+
+        session.unpair(notifyPeer: true)
+
+        XCTAssertEqual(notified?.pairId, "dndsync-abc")
+        XCTAssertEqual(notified?.pairSecret, "secret")
+        XCTAssertFalse(session.joined)
+    }
+
+    func testUnauthorizedPairCheckWhileJoinedUnpairs() async {
+        let forwarder = FakePairForwarder()
+        let session = joinedSession(forwarder: forwarder, store: InMemoryPairStore())
+        XCTAssertTrue(session.joined)
+
+        forwarder.error = ForwarderClientError.httpStatus(401, "")
+        await session.refreshPairOrUnpair()
+
+        XCTAssertFalse(session.joined)
+    }
+
+    func testPairCheckLeavesJoinedOnSuccess() async {
+        let forwarder = FakePairForwarder()
+        let session = joinedSession(forwarder: forwarder, store: InMemoryPairStore())
+        forwarder.devices = [
+            ForwarderDevice(sender: LanConstants.senderAndroid, e2ePublicKey: "YQ==")
+        ]
+        await session.refreshPairOrUnpair()
+        XCTAssertTrue(session.joined)
+    }
+
     func testRestoreFromStore() {
         let mac = E2ECrypto.generateIdentity()
         let phone = E2ECrypto.generateIdentity()

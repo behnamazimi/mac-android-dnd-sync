@@ -108,14 +108,19 @@ class SyncSession(
     }
 
     fun sendUnpair(context: UnpairContext) {
-        if (context.pairId.isEmpty() || context.pairSecret.isEmpty() || context.forwarderUrl.isEmpty()) {
+        if (context.pairId.isEmpty()) {
             return
         }
         val control = PairControlFrames.unpair(pairId = context.pairId)
         lan.sendUnpairNow(control)
-        ioScope.launch {
-            postUnpairAndDelete(context, control)
+        if (context.pairSecret.isEmpty() || context.forwarderUrl.isEmpty()) {
+            return
         }
+        // PairSession.unpair() stops LAN as soon as this returns. Close() on
+        // that socket can RST and drop the frame we just wrote, and a
+        // fire-and-forget POST means the Mac's APNs wake has not even been
+        // sent yet. Finish the forwarder notify first.
+        postUnpairAndDelete(context, control)
     }
 
     fun setPairId(pairId: String) {
