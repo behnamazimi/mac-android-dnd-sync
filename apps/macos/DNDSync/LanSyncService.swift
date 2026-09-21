@@ -59,9 +59,18 @@ final class LanSyncService {
     }
 
     func sendUnpairNow(_ control: Dndsync_V1_PairControl) {
-        queue.sync { [weak self] in
-            self?.sendControlLocked(control)
+        // Wait off the LAN queue: `contentProcessed` also lands there, so a
+        // `queue.sync` wait would deadlock. Unpair then immediately `stop()`s,
+        // and `cancel()` drops anything still sitting in Network.framework.
+        let done = DispatchSemaphore(value: 0)
+        queue.async { [weak self] in
+            guard let self else {
+                done.signal()
+                return
+            }
+            self.sendControlLocked(control, completion: { done.signal() })
         }
+        _ = done.wait(timeout: .now() + 1)
     }
 
     private func startLocked() {
@@ -241,10 +250,10 @@ final class LanSyncService {
                     do {
                         let payloads = try self.accumulator.append(data)
                         for payload in payloads {
-                            if let state = DndStateFrames.decode(payload) {
-                                self.onInbound?(state)
-                            } else if let control = PairControlFrames.decode(payload) {
+                            if let control = PairControlFrames.decode(payload) {
                                 self.onInboundUnpair?(control)
+                            } else if let state = DndStateFrames.decode(payload) {
+                                self.onInbound?(state)
                             }
                         }
                     } catch {
@@ -279,15 +288,26 @@ final class LanSyncService {
         }
     }
 
-    private func sendControlLocked(_ control: Dndsync_V1_PairControl) {
+    private func sendControlLocked(
+        _ control: Dndsync_V1_PairControl,
+        completion: @escaping () -> Void
+    ) {
         guard let connection, connection.state == .ready else {
+            completion()
             return
         }
         do {
             let data = try LengthPrefixedFramer.frame(control.serializedData())
-            connection.send(content: data, completion: .contentProcessed { _ in })
+            // `isComplete: true` half-closes after this frame so `stop()`'s
+            // `cancel()` cannot drop it.
+            connection.send(
+                content: data,
+                isComplete: true,
+                completion: .contentProcessed { _ in completion() }
+            )
         } catch {
             fail("send failed: \(error.localizedDescription)")
+            completion()
         }
     }
 

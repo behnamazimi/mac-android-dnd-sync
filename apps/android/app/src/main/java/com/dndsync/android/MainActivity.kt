@@ -43,7 +43,7 @@ class MainActivity : ComponentActivity() {
         val startDestination = AndroidRouting.route(AndroidRouting.destination(progress))
         setContent {
             DndSyncTheme {
-                DndSyncNavHost(startDestination = startDestination)
+                DndSyncNavHost(startDestination = startDestination, pairSession = pairSession)
             }
         }
     }

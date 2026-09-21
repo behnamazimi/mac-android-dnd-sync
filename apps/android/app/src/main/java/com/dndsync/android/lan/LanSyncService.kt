@@ -229,6 +229,9 @@ class LanSyncService @Inject constructor(
             try {
                 socket.getOutputStream().write(framed)
                 socket.getOutputStream().flush()
+                // Half-close so the peer still gets the frame after we `stop()`
+                // and `close()` the socket on unpair.
+                socket.shutdownOutput()
             } catch (error: IOException) {
                 _ui.update { it.copy(lastError = error.message) }
             }
@@ -326,14 +329,14 @@ class LanSyncService @Inject constructor(
                 }
                 val frames = accumulator.append(buffer, n)
                 for (payload in frames) {
+                    val control = PairControlFrames.decode(payload)
+                    if (control != null) {
+                        _inboundUnpair.tryEmit(control)
+                        continue
+                    }
                     val peeked = try {
                         DndState.parseFrom(payload)
                     } catch (_: Exception) {
-                        continue
-                    }
-                    if (peeked.version == PairControlFrames.VERSION) {
-                        val control = PairControlFrames.decode(payload) ?: continue
-                        _inboundUnpair.tryEmit(control)
                         continue
                     }
                     if (peeked.version != Wire.PROTO_VERSION) {
@@ -377,7 +380,16 @@ class LanSyncService @Inject constructor(
     private fun closeSession() {
         synchronized(sessionLock) {
             try {
-                session?.close()
+                session?.let { socket ->
+                    try {
+                        // Unread inbound bytes make a default close() RST,
+                        // which drops the unpair frame still in the send
+                        // buffer. Linger until that frame is actually sent.
+                        socket.setSoLinger(true, 2)
+                    } catch (_: Exception) {
+                    }
+                    socket.close()
+                }
             } catch (_: IOException) {
             }
             session = null

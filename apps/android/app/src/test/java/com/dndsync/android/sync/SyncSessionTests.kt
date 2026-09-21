@@ -1,5 +1,6 @@
 package com.dndsync.android.sync
 
+import com.dndsync.android.pair.UnpairContext
 import kotlinx.coroutines.Dispatchers
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -100,6 +101,96 @@ class SyncSessionTests {
         val pair = FakeSyncPairing().apply { joined = true }
         val session = session(InMemorySyncLan(), InMemorySyncCloud(), pair)
         session.onInboundUnpair(PairControlFrames.unpair("dndsync-test"))
+        assertTrue(pair.unpaired)
+        assertFalse(pair.joined)
+    }
+
+    @Test
+    fun sendUnpairWritesLanAndPostsThenDeletes() {
+        val lan = InMemorySyncLan()
+        val cloud = InMemorySyncCloud()
+        val session = session(lan, cloud, FakeSyncPairing().apply { joined = true })
+        session.sendUnpair(
+            UnpairContext(
+                pairId = "dndsync-test",
+                pairSecret = "secret",
+                forwarderUrl = "https://example.invalid",
+                aesKey = null,
+            ),
+        )
+        assertEquals(1, lan.unpairs.size)
+        assertEquals("dndsync-test", lan.unpairs[0].pairId)
+        assertEquals(1, cloud.posts.size)
+        assertTrue(cloud.deleted)
+    }
+
+    @Test
+    fun sendUnpairStillSendsLanWithoutForwarder() {
+        val lan = InMemorySyncLan()
+        val cloud = InMemorySyncCloud()
+        val session = session(lan, cloud, FakeSyncPairing())
+        session.sendUnpair(
+            UnpairContext(
+                pairId = "dndsync-test",
+                pairSecret = "",
+                forwarderUrl = "",
+                aesKey = null,
+            ),
+        )
+        assertEquals(1, lan.unpairs.size)
+        assertTrue(cloud.posts.isEmpty())
+        assertFalse(cloud.deleted)
+    }
+
+    @Test
+    fun sendUnpairDoesNotReturnUntilCloudFinishes() {
+        val gate = java.util.concurrent.CountDownLatch(1)
+        val posts = mutableListOf<ByteArray>()
+        val cloud = object : SyncCloud {
+            var deleted = false
+            override fun postEnvelope(baseUrl: String, pairId: String, secret: String, envelope: ByteArray) {
+                gate.await(2, java.util.concurrent.TimeUnit.SECONDS)
+                posts.add(envelope)
+            }
+            override fun deletePair(baseUrl: String, pairId: String, secret: String) {
+                deleted = true
+            }
+        }
+        val session = session(InMemorySyncLan(), cloud, FakeSyncPairing().apply { joined = true })
+        val finished = java.util.concurrent.atomic.AtomicBoolean(false)
+        val thread = Thread {
+            session.sendUnpair(
+                UnpairContext(
+                    pairId = "dndsync-test",
+                    pairSecret = "secret",
+                    forwarderUrl = "https://example.invalid",
+                    aesKey = null,
+                ),
+            )
+            finished.set(true)
+        }
+        thread.start()
+        Thread.sleep(50)
+        assertFalse(finished.get())
+        gate.countDown()
+        thread.join(2_000)
+        assertTrue(finished.get())
+        assertTrue(cloud.deleted)
+        assertEquals(1, posts.size)
+    }
+
+    @Test
+    fun inboundPairControlEnvelopeClearsPair() {
+        val pair = FakeSyncPairing().apply { joined = true }
+        val session = session(InMemorySyncLan(), InMemorySyncCloud(), pair)
+        val control = PairControlFrames.unpair("dndsync-test")
+        val envelope = CloudEnvelopeCodec.make(
+            "dndsync-test",
+            Wire.SENDER_MAC,
+            control.toByteArray(),
+            CloudEnvelopeCodec.PAYLOAD_PAIR_CONTROL,
+        )
+        session.onInboundEnvelope(envelope)
         assertTrue(pair.unpaired)
         assertFalse(pair.joined)
     }

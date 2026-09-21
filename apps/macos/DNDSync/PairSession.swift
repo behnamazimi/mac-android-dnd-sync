@@ -15,6 +15,7 @@ final class PairSession {
     private static let pollFastSeconds: Double = 2
     private static let pollSlowSeconds: Double = 10
     private static let pollSlowAfterSeconds: TimeInterval = 300
+    private static let pairedWatchSeconds: Double = 3
     private static let qrScale: CGFloat = 10
     private static let qrCorrection = "M"
 
@@ -58,6 +59,7 @@ final class PairSession {
     private var peerPublicKey: Data?
     private var aesKey: SymmetricKey?
     private var pollTask: Task<Void, Never>?
+    private var pairedWatchTask: Task<Void, Never>?
     private var pollStartedAt: Date?
     private var createPairInFlight = false
 
@@ -295,6 +297,7 @@ final class PairSession {
         lastSyncViaLan = false
         recentActivity = []
         stopPeerPoll()
+        stopPairedWatch()
         onPairIdChange?(pairId)
         publish()
         Task {
@@ -306,6 +309,42 @@ final class PairSession {
         guard joined else { return }
         guard PairControlFrames.matches(control, pairId: pairId) else { return }
         unpair(notifyPeer: false)
+    }
+
+    /// The phone deletes the pair on unpair. Silent APNs to a menu-bar extra
+    /// often never arrives, and LAN may not be up. A 401 here is the signal.
+    func refreshPairOrUnpair() async {
+        guard joined, !forwarderURL.isEmpty, !pairSecret.isEmpty, !pairId.isEmpty else {
+            return
+        }
+        do {
+            _ = try await forwarder.listDevices(
+                baseURL: forwarderURL,
+                pairId: pairId,
+                secret: pairSecret
+            )
+        } catch {
+            if isUnauthorized(error) {
+                autoUnpairIfExpired()
+            }
+        }
+    }
+
+    func startPairedWatch() {
+        if pairedWatchTask != nil { return }
+        pairedWatchTask = Task { [weak self] in
+            while let self, !Task.isCancelled, self.joined {
+                try? await Task.sleep(for: .seconds(Self.pairedWatchSeconds))
+                guard !Task.isCancelled else { return }
+                await self.refreshPairOrUnpair()
+            }
+            self?.pairedWatchTask = nil
+        }
+    }
+
+    func stopPairedWatch() {
+        pairedWatchTask?.cancel()
+        pairedWatchTask = nil
     }
 
     func startPeerPoll(shouldContinue: @escaping () -> Bool) {

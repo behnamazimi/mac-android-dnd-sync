@@ -61,6 +61,15 @@ class AndroidRoutingTest {
         )
     }
 
+    @Test
+    fun peerUnpairFromHomeResetsToWelcome() {
+        assertEquals(true, AndroidRouting.shouldResetToWelcome(false, Routes.Home))
+        assertEquals(true, AndroidRouting.shouldResetToWelcome(false, Routes.Settings))
+        assertEquals(false, AndroidRouting.shouldResetToWelcome(false, Routes.Welcome))
+        assertEquals(false, AndroidRouting.shouldResetToWelcome(false, Routes.connectToMac(Origin.Onboarding)))
+        assertEquals(false, AndroidRouting.shouldResetToWelcome(true, Routes.Home))
+    }
+
     private fun progress(
         hasStoredPair: Boolean = false,
         joined: Boolean = false,

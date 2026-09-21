@@ -57,6 +57,7 @@ final class FakeSyncPairing: SyncPairing {
     var lastSync: (unixMs: Int64, on: Bool, sender: String, viaLan: Bool)?
     var unpaired = false
     var cloudErrors: [String] = []
+    var refreshCalls = 0
 
     func seal(_ plaintext: Data) throws -> Data { plaintext }
     func open(_ ciphertext: Data) -> Data? { ciphertext }
@@ -79,4 +80,8 @@ final class FakeSyncPairing: SyncPairing {
     }
 
     func noteCloudSuccess() {}
+
+    func refreshPairOrUnpair() async {
+        refreshCalls += 1
+    }
 }

@@ -1,13 +1,18 @@
 package com.dndsync.android.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.dndsync.android.BuildConfig
+import com.dndsync.android.pair.PairSession
 import com.dndsync.android.ui.diagnostics.DiagnosticsScreen
 import com.dndsync.android.ui.home.HomeScreen
 import com.dndsync.android.ui.onboarding.AllSetScreen
@@ -32,9 +37,18 @@ import com.dndsync.android.ui.settings.UnpairConfirmScreen
 @Composable
 fun DndSyncNavHost(
     startDestination: String,
+    pairSession: PairSession,
     modifier: Modifier = Modifier,
 ) {
     val navController = rememberNavController()
+    val cloud by pairSession.ui.collectAsStateWithLifecycle()
+    val current by navController.currentBackStackEntryAsState()
+    LaunchedEffect(cloud, current?.destination?.route) {
+        val route = current?.destination?.route
+        if (AndroidRouting.shouldResetToWelcome(pairSession.hasStoredPair, route)) {
+            navController.navigate(Routes.Welcome) { popUpTo(0) { inclusive = true } }
+        }
+    }
     NavHost(navController = navController, startDestination = startDestination, modifier = modifier) {
         composable(Routes.Welcome) {
             WelcomeScreen(

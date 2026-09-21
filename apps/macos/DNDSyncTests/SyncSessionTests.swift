@@ -142,6 +142,84 @@ final class SyncSessionTests: XCTestCase {
         XCTAssertTrue(pair.unpaired)
         XCTAssertFalse(pair.joined)
     }
+
+    func testSendUnpairWritesLanAndPostsThenDeletes() async {
+        let lan = InMemorySyncLan()
+        let cloud = InMemorySyncCloud()
+        let pair = FakeSyncPairing()
+        pair.joined = true
+        let session = SyncSession(lan: lan, cloud: cloud, pair: pair)
+        session.sendUnpair(
+            UnpairContext(
+                pairId: "dndsync-test",
+                pairSecret: "secret",
+                forwarderURL: "https://example.invalid",
+                aesKey: nil
+            )
+        )
+        try? await Task.sleep(nanoseconds: 20_000_000)
+
+        XCTAssertEqual(lan.unpairs.count, 1)
+        XCTAssertEqual(lan.unpairs[0].pairID, "dndsync-test")
+        XCTAssertEqual(cloud.posts.count, 1)
+        XCTAssertTrue(cloud.deleted)
+    }
+
+    func testSendUnpairStillSendsLanWithoutForwarder() {
+        let lan = InMemorySyncLan()
+        let cloud = InMemorySyncCloud()
+        let session = SyncSession(lan: lan, cloud: cloud, pair: FakeSyncPairing())
+        session.sendUnpair(
+            UnpairContext(
+                pairId: "dndsync-test",
+                pairSecret: "",
+                forwarderURL: "",
+                aesKey: nil
+            )
+        )
+
+        XCTAssertEqual(lan.unpairs.count, 1)
+        XCTAssertTrue(cloud.posts.isEmpty)
+        XCTAssertFalse(cloud.deleted)
+    }
+
+    func testInboundPairControlEnvelopeClearsPair() throws {
+        let pair = FakeSyncPairing()
+        pair.joined = true
+        let session = SyncSession(
+            lan: InMemorySyncLan(),
+            cloud: InMemorySyncCloud(),
+            pair: pair
+        )
+        let control = PairControlFrames.unpair(pairId: "dndsync-test")
+        let envelope = CloudEnvelopeCodec.make(
+            pairId: "dndsync-test",
+            sender: LanConstants.senderAndroid,
+            ciphertext: try control.serializedData(),
+            payloadKind: CloudEnvelopeCodec.payloadPairControl
+        )
+
+        session.onInboundEnvelope(envelope)
+
+        XCTAssertTrue(pair.unpaired)
+        XCTAssertFalse(pair.joined)
+    }
+
+    func testLanDisconnectWhileJoinedChecksPair() async {
+        let lan = InMemorySyncLan()
+        let pair = FakeSyncPairing()
+        pair.joined = true
+        let session = SyncSession(lan: lan, cloud: InMemorySyncCloud(), pair: pair)
+
+        lan.onUiState?(LanUiSnapshot(advertising: true, browsing: true, connected: true, lastError: nil))
+        try? await Task.sleep(nanoseconds: 20_000_000)
+
+        lan.onUiState?(LanUiSnapshot(advertising: true, browsing: true, connected: false, lastError: "disconnected"))
+        try? await Task.sleep(nanoseconds: 20_000_000)
+
+        XCTAssertGreaterThanOrEqual(pair.refreshCalls, 1)
+        _ = session
+    }
 }
 
 final class LanSyncGateTests: XCTestCase {

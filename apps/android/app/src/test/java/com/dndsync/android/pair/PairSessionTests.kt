@@ -40,6 +40,21 @@ class PairSessionTests {
     }
 
     @Test
+    fun unpairNotifiesPeerWhenJoined() {
+        val session = session(FakePairForwarder(), InMemoryPairStore(), token = { "fcm-token" })
+        session.pastePayload(payloadJson())
+        var notified: UnpairContext? = null
+        session.onNotifyPeerUnpair = { notified = it }
+
+        session.unpair(notifyPeer = true)
+
+        assertEquals("dndsync-abc", notified?.pairId)
+        assertEquals("secret", notified?.pairSecret)
+        assertFalse(session.joined)
+        assertFalse(session.hasStoredPair)
+    }
+
+    @Test
     fun restoreFromStore() {
         val mac = E2ECrypto.generateIdentity()
         val phone = E2ECrypto.generateIdentity()

@@ -87,11 +87,14 @@ final class SyncSession {
     }
 
     func sendUnpair(_ context: UnpairContext) {
-        guard !context.pairId.isEmpty, !context.pairSecret.isEmpty, !context.forwarderURL.isEmpty else {
+        guard !context.pairId.isEmpty else {
             return
         }
         let control = PairControlFrames.unpair(pairId: context.pairId)
         lan.sendUnpairNow(control)
+        guard !context.pairSecret.isEmpty, !context.forwarderURL.isEmpty else {
+            return
+        }
         Task {
             await self.postUnpairAndDelete(context: context, control: control)
         }
@@ -130,6 +133,7 @@ final class SyncSession {
         lan.onUiState = { [weak self] snapshot in
             Task { @MainActor in
                 guard let self else { return }
+                let dropped = self.lanConnected && !snapshot.connected
                 self.lanAdvertising = snapshot.advertising
                 self.lanBrowsing = snapshot.browsing
                 self.lanConnected = snapshot.connected
@@ -139,6 +143,9 @@ final class SyncSession {
                     self.lastLanErrorText = "Last LAN error: —"
                 }
                 self.publish()
+                if dropped, self.pair.joined {
+                    await self.pair.refreshPairOrUnpair()
+                }
             }
         }
         lan.onInbound = { [weak self] state in

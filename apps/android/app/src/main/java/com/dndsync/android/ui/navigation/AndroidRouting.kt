@@ -44,4 +44,23 @@ object AndroidRouting {
             AndroidDestination.NotificationsAccess -> Routes.NotificationsAccess
             AndroidDestination.Home -> Routes.Home
         }
+
+    /**
+     * Start destination is computed once. A peer unpair (or a 401 expiry)
+     * clears the pair while NavHost is already on Home/Settings; send the
+     * user back to Welcome instead of leaving a stale status screen.
+     */
+    fun shouldResetToWelcome(hasStoredPair: Boolean, route: String?): Boolean {
+        if (hasStoredPair) {
+            return false
+        }
+        val route = route ?: return false
+        if (route == Routes.Welcome) {
+            return false
+        }
+        if (route.startsWith("connect_to_mac/")) {
+            return false
+        }
+        return true
+    }
 }
