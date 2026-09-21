@@ -51,6 +51,8 @@ enum ProductCopy {
     static let waitingPhone = "Waiting for your phone…"
     static let copyPairingCode = "Copy pairing code"
     static let downloadAndroidApp = "Download the Android app"
+    static let seeSourceOnGitHub = "See the source on GitHub"
+    static let starIfItHelps = "Star it if it helps."
 
     static let close = "Close"
     static let inSyncTitle = "In sync"
@@ -98,11 +100,13 @@ enum ProductCopy {
     static let applyDroppedNotificationTitle = "DND Sync couldn't update Focus"
 }
 
-/// Not on the App Store yet — both apps point at the same GitHub Release page
-/// (notarized `.dmg` + signed `.apk`, both attached by `release.yml` on a
-/// version tag). `/releases/latest` over a per-asset link since asset URLs
-/// change every tag.
+/// Not on the App Store yet — both apps point at the same GitHub repo.
+/// Releases (`/releases/latest`) is the download page (notarized `.dmg` +
+/// signed `.apk`, both attached by `release.yml` on a version tag). The repo
+/// root is About's source link. `/releases/latest` over a per-asset link since
+/// asset URLs change every tag.
 enum Distribution {
+    static let githubRepo = URL(string: "https://github.com/behnamazimi/mac-android-dnd-sync")!
     static let githubReleases = URL(string: "https://github.com/behnamazimi/mac-android-dnd-sync/releases/latest")!
 }
 

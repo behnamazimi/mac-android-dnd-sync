@@ -86,6 +86,7 @@ object ProductCopy {
     const val BY_THIS_PHONE = "this phone"
     const val BY_THE_MAC = "the Mac"
     const val ABOUT_SECTION = "About"
+    const val ABOUT_THE_APP = "About the app"
 
     // Re-pair confirm
     const val REPAIR_CONFIRM_TITLE = "Connect a different Mac"
@@ -105,6 +106,8 @@ object ProductCopy {
     const val WHAT_WE_STORE_SECTION = "What we store"
     const val WHAT_WE_STORE_BODY =
         "We store a link between your devices and a way to reach this phone. We never store whether Do Not Disturb is on or off."
+    const val SEE_SOURCE_ON_GITHUB = "See the source on GitHub"
+    const val STAR_IF_IT_HELPS = "Star it if it helps."
     const val OPEN_SOURCE_LICENSES = "Open source licenses"
     const val LICENSE_INTER = "Inter"
     const val DIAGNOSTICS = "Diagnostics"
@@ -114,11 +117,13 @@ object ProductCopy {
 }
 
 /**
- * Not on the Play Store yet. Both apps point at the same GitHub Release page
- * (notarized `.dmg` + signed `.apk`, both attached by `release.yml` on a
- * version tag). `/releases/latest` over a per-asset link since asset URLs
- * change every tag.
+ * Not on the Play Store yet. Both apps point at the same GitHub repo.
+ * Releases (`/releases/latest`) is the download page (notarized `.dmg` +
+ * signed `.apk`, both attached by `release.yml` on a version tag). The repo
+ * root is About's source link. `/releases/latest` over a per-asset link since
+ * asset URLs change every tag.
  */
 object Distribution {
+    const val GITHUB_REPO = "https://github.com/behnamazimi/mac-android-dnd-sync"
     const val GITHUB_RELEASES = "https://github.com/behnamazimi/mac-android-dnd-sync/releases/latest"
 }

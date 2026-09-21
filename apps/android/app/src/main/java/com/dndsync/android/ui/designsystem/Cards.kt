@@ -181,6 +181,7 @@ fun SettingsRow(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     destructive: Boolean = false,
+    supporting: String? = null,
     trailing: @Composable RowScope.() -> Unit = {},
 ) {
     val scheme = MaterialTheme.colorScheme
@@ -199,7 +200,18 @@ fun SettingsRow(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(text = label, style = MaterialTheme.typography.bodyLarge)
+            if (supporting == null) {
+                Text(text = label, style = MaterialTheme.typography.bodyLarge)
+            } else {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(text = label, style = MaterialTheme.typography.bodyLarge)
+                    Text(
+                        text = supporting,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = DndSyncTheme.colors.inkSoft,
+                    )
+                }
+            }
             trailing()
         }
     }
