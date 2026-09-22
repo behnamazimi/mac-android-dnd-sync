@@ -46,6 +46,7 @@ export async function createPair(
   pairId: string,
   secretHash: string,
 ): Promise<void> {
+  await deletePair(pairId);
   await pairRef(pairId).set({
     secretHash,
     createdAt: FieldValue.serverTimestamp(),

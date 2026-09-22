@@ -99,7 +99,7 @@ final class SyncSession {
         #endif
     }
 
-    func sendUnpair(_ context: UnpairContext) {
+    func sendUnpair(_ context: UnpairContext) async {
         guard !context.pairId.isEmpty else {
             return
         }
@@ -108,9 +108,7 @@ final class SyncSession {
         guard !context.pairSecret.isEmpty, !context.forwarderURL.isEmpty else {
             return
         }
-        Task {
-            await self.postUnpairAndDelete(context: context, control: control)
-        }
+        await postUnpairAndDelete(context: context, control: control)
     }
 
     func setPairId(_ pairId: String) {

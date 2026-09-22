@@ -47,7 +47,7 @@ final class PairSession {
 
     var e2ePublicKeyB64: String { identity.rawPublic.base64EncodedString() }
 
-    var onNotifyPeerUnpair: ((UnpairContext) -> Void)?
+    var onNotifyPeerUnpair: ((UnpairContext) async -> Void)?
     var onJoined: (() -> Void)?
     var onCleared: (() -> Void)?
     var onPairIdChange: ((String) -> Void)?
@@ -154,9 +154,13 @@ final class PairSession {
         if pairSecret.isEmpty {
             pairSecret = hex(E2ECrypto.randomBytes(Self.secretByteCount))
         }
+        #if DEBUG
+        pairId = LanConstants.pairId
+        #else
         if pairId.isEmpty {
             pairId = Self.pairIdPrefix + hex(E2ECrypto.randomBytes(Self.pairIdByteCount))
         }
+        #endif
         forwarderURL = secrets.baseURL
         qrMessage = nil
         do {
@@ -272,22 +276,24 @@ final class PairSession {
     }
 
     func unpair(notifyPeer: Bool) {
-        if UnpairPolicy.shouldNotifyPeer(notifyPeer: notifyPeer, joined: joined) {
-            onNotifyPeerUnpair?(
-                UnpairContext(
-                    pairId: pairId,
-                    pairSecret: pairSecret,
-                    forwarderURL: forwarderURL,
-                    aesKey: aesKey
-                )
-            )
-        }
+        let previous = UnpairContext(
+            pairId: pairId,
+            pairSecret: pairSecret,
+            forwarderURL: forwarderURL,
+            aesKey: aesKey
+        )
+        let notify = UnpairPolicy.shouldNotifyPeer(notifyPeer: notifyPeer, joined: joined)
+        let canDelete = !previous.pairId.isEmpty && !previous.pairSecret.isEmpty && !previous.forwarderURL.isEmpty
         onCleared?()
         store.clear()
         identity = E2ECrypto.generateIdentity()
         peerPublicKey = nil
         aesKey = nil
+        #if DEBUG
+        pairId = LanConstants.pairId
+        #else
         pairId = Self.pairIdPrefix + hex(E2ECrypto.randomBytes(Self.pairIdByteCount))
+        #endif
         pairSecret = hex(E2ECrypto.randomBytes(Self.secretByteCount))
         pairPayloadJSON = ""
         qrImage = nil
@@ -304,6 +310,17 @@ final class PairSession {
         onPairIdChange?(pairId)
         publish()
         Task {
+            if canDelete {
+                if notify {
+                    await onNotifyPeerUnpair?(previous)
+                } else {
+                    try? await forwarder.deletePair(
+                        baseURL: previous.forwarderURL,
+                        pairId: previous.pairId,
+                        secret: previous.pairSecret
+                    )
+                }
+            }
             await create()
         }
     }
