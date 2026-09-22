@@ -9,7 +9,8 @@ protocol PairForwarder: AnyObject {
         sender: String,
         platform: String,
         token: String,
-        e2ePublicKey: String?
+        e2ePublicKey: String?,
+        apnsEnvironment: String
     ) async throws
 
     func createPair(
@@ -20,7 +21,8 @@ protocol PairForwarder: AnyObject {
         sender: String,
         platform: String,
         token: String,
-        e2ePublicKey: String?
+        e2ePublicKey: String?,
+        apnsEnvironment: String
     ) async throws
 
     func listDevices(

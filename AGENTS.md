@@ -250,16 +250,19 @@ secrets-apns-p8` sets `APNS_P8` from `scripts/apns-send/AuthKey.p8`.
 **Redeploy after changing any secret.** The function reads secret versions
 at deploy time, not on every request.
 
-`APNS_HOST` is `https://api.sandbox.push.apple.com` while the Mac app runs
-from Xcode Debug, or `https://api.push.apple.com` once it runs from a
-Developer ID (or App Store) export. Apple issues a different device token
-per environment, and sending it to the wrong host fails closed
-(`BadDeviceToken` / `BadEnvironmentKeyInToken`).
+`APNS_HOST` is only the fallback order for a Mac that registered before it
+started reporting an environment. A Debug build sends `sandbox` with its
+token and a Developer ID or App Store build sends `production`. The
+forwarder stores that next to the token and posts to the matching Apple
+host. A record with no environment still tries `APNS_HOST` first and, on
+`BadDeviceToken` or `BadEnvironmentKeyInToken`, the other host once. Apple
+still issues a different device token per environment.
 
-Firestore stores `secretHash` and device push tokens only, never an on/off
-bit. Deleting a pair (`DELETE /v1/pairs/:pairId`, same bearer token as
-`join`) already happens automatically when a client unpairs; there's no
-separate admin script.
+Firestore stores `secretHash`, device push tokens, and for the Mac the
+APNs environment that issued the token (`sandbox` or `production`). It
+never stores an on/off bit. Deleting a pair (`DELETE /v1/pairs/:pairId`,
+same bearer token as `join`) already happens automatically when a client
+unpairs; there's no separate admin script.
 
 Release and CI notes live in [CONTRIBUTING.md](CONTRIBUTING.md).
 

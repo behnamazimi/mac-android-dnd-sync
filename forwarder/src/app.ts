@@ -8,7 +8,7 @@ import {
   safeEqualHex,
   sha256Hex,
 } from "./auth.js";
-import { sendJoinedApns, sendSilentApns } from "./apns.js";
+import { isApnsEnvironment, sendJoinedApns, sendSilentApns } from "./apns.js";
 import { sendDataFcm } from "./fcm.js";
 import { wakeMacOnJoin } from "./join_wake.js";
 import {
@@ -17,6 +17,7 @@ import {
   getDevice,
   listDevicePublicKeys,
   upsertDevice,
+  type ApnsEnvironment,
   type Platform,
   type Sender,
 } from "./store.js";
@@ -29,6 +30,16 @@ function isSender(value: unknown): value is Sender {
 
 function isPlatform(value: unknown): value is Platform {
   return value === "apns" || value === "fcm";
+}
+
+function apnsEnvironmentOf(body: {
+  platform?: string;
+  apns_environment?: string;
+}): ApnsEnvironment | undefined {
+  if (body.platform !== "apns" || !isApnsEnvironment(body.apns_environment)) {
+    return undefined;
+  }
+  return body.apns_environment;
 }
 
 function otherSender(sender: Sender): Sender {
@@ -50,6 +61,7 @@ app.post("/v1/pairs", async (c) => {
     platform?: string;
     token?: string;
     e2e_public_key?: string;
+    apns_environment?: string;
   }>();
   const pairId = body.pair_id?.trim() ?? "";
   const secretHash = body.secret_hash?.trim() ?? "";
@@ -64,6 +76,7 @@ app.post("/v1/pairs", async (c) => {
     platform: body.platform,
     token: body.token,
     e2ePublicKey: body.e2e_public_key,
+    apnsEnvironment: apnsEnvironmentOf(body),
   });
   return c.body(null, 201);
 });
@@ -83,6 +96,7 @@ app.post("/v1/pairs/:pairId/join", async (c) => {
     platform?: string;
     token?: string;
     e2e_public_key?: string;
+    apns_environment?: string;
   }>();
   if (!isSender(body.sender) || !isPlatform(body.platform) || !body.token) {
     return c.json({ error: "invalid device" }, 400);
@@ -91,6 +105,7 @@ app.post("/v1/pairs/:pairId/join", async (c) => {
     platform: body.platform,
     token: body.token,
     e2ePublicKey: body.e2e_public_key,
+    apnsEnvironment: apnsEnvironmentOf(body),
   });
   if (body.sender === "android") {
     try {
@@ -142,6 +157,7 @@ app.put("/v1/pairs/:pairId/devices", async (c) => {
     platform?: string;
     token?: string;
     e2e_public_key?: string;
+    apns_environment?: string;
   }>();
   if (!isSender(body.sender) || !isPlatform(body.platform) || !body.token) {
     return c.json({ error: "invalid device" }, 400);
@@ -150,6 +166,7 @@ app.put("/v1/pairs/:pairId/devices", async (c) => {
     platform: body.platform,
     token: body.token,
     e2ePublicKey: body.e2e_public_key,
+    apnsEnvironment: apnsEnvironmentOf(body),
   });
   return c.body(null, 204);
 });
@@ -201,7 +218,7 @@ app.post("/v1/pairs/:pairId/envelopes", async (c) => {
   }
   try {
     if (peer.platform === "apns") {
-      await sendSilentApns(peer.token, envelopeB64);
+      await sendSilentApns(peer.token, envelopeB64, peer.apnsEnvironment);
     } else if (peer.platform === "fcm") {
       await sendDataFcm(peer.token, envelopeB64);
     } else {

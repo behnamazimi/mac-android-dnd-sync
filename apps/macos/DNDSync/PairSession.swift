@@ -12,6 +12,13 @@ final class PairSession {
     private static let pairIdByteCount = 8
     private static let secretByteCount = 32
     private static let platform = "apns"
+    static let apnsEnvironment: String = {
+        #if DEBUG
+        return "sandbox"
+        #else
+        return "production"
+        #endif
+    }()
     private static let pollSeconds: Double = 15
     private static let qrScale: CGFloat = 10
     private static let qrCorrection = "M"
@@ -161,7 +168,8 @@ final class PairSession {
                 sender: LanConstants.senderMac,
                 platform: Self.platform,
                 token: token,
-                e2ePublicKey: e2ePublicKeyB64
+                e2ePublicKey: e2ePublicKeyB64,
+                apnsEnvironment: Self.apnsEnvironment
             )
             persist()
             onPairIdChange?(pairId)
@@ -203,7 +211,8 @@ final class PairSession {
                 sender: LanConstants.senderMac,
                 platform: Self.platform,
                 token: token,
-                e2ePublicKey: e2ePublicKeyB64
+                e2ePublicKey: e2ePublicKeyB64,
+                apnsEnvironment: Self.apnsEnvironment
             )
             lastRegisterText = "Last register: 204"
             lastCloudErrorText = "Last cloud error: —"

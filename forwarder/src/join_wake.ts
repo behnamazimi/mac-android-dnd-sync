@@ -1,8 +1,8 @@
-import { getDevice, type DeviceRecord } from "./store.js";
+import { getDevice, type ApnsEnvironment, type DeviceRecord } from "./store.js";
 
 export async function wakeMacOnJoin(
   pairId: string,
-  wake: (token: string) => Promise<void>,
+  wake: (token: string, environment?: ApnsEnvironment) => Promise<void>,
   loadMac: (id: string) => Promise<DeviceRecord | null> = (id) =>
     getDevice(id, "mac"),
 ): Promise<void> {
@@ -10,5 +10,5 @@ export async function wakeMacOnJoin(
   if (!mac?.token || mac.platform !== "apns") {
     return;
   }
-  await wake(mac.token);
+  await wake(mac.token, mac.apnsEnvironment);
 }

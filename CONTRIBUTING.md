@@ -109,9 +109,11 @@ just with secrets instead of your keychain/`local.properties`. Run
 
 - The Release build uses `DNDSync-Release.entitlements`
   (`aps-environment: production`), not the Debug entitlements
-  (`development`). A production APNs token only works if the forwarder's
-  `APNS_HOST` secret is also `https://api.push.apple.com`, not the sandbox
-  host. Don't flip one without the other.
+  (`development`). A Debug Mac registers its token as `sandbox` and a
+  Release Mac as `production`. The forwarder sends to that host. A device
+  record from before that field existed still tries `APNS_HOST` first and
+  retries the other host once on `BadDeviceToken` or
+  `BadEnvironmentKeyInToken`.
 - A release-signed Android build uses a different certificate than the debug
   keystore Android Studio uses, so **Firebase needs this release keystore's
   SHA-1/SHA-256 fingerprints added too** (`keytool -list -v -keystore

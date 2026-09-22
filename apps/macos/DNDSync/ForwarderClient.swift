@@ -39,13 +39,15 @@ final class ForwarderClient {
         sender: String,
         platform: String,
         token: String,
-        e2ePublicKey: String?
+        e2ePublicKey: String?,
+        apnsEnvironment: String
     ) async throws {
         let url = try endpoint(baseURL, path: "/v1/pairs/\(pairId)/devices")
         var body: [String: String] = [
             "sender": sender,
             "platform": platform,
             "token": token,
+            "apns_environment": apnsEnvironment,
         ]
         if let e2ePublicKey, !e2ePublicKey.isEmpty {
             body["e2e_public_key"] = e2ePublicKey
@@ -61,7 +63,8 @@ final class ForwarderClient {
         sender: String,
         platform: String,
         token: String,
-        e2ePublicKey: String?
+        e2ePublicKey: String?,
+        apnsEnvironment: String
     ) async throws {
         let url = try endpoint(baseURL, path: "/v1/pairs")
         var body: [String: String] = [
@@ -70,6 +73,7 @@ final class ForwarderClient {
             "sender": sender,
             "platform": platform,
             "token": token,
+            "apns_environment": apnsEnvironment,
         ]
         if let e2ePublicKey, !e2ePublicKey.isEmpty {
             body["e2e_public_key"] = e2ePublicKey

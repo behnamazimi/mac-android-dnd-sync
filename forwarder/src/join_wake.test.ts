@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { silentPushBody } from "./apns.js";
+import { apnsHosts, hostsForPush, isWrongApnsEnvironment, silentPushBody } from "./apns.js";
 import { wakeMacOnJoin } from "./join_wake.js";
 
 test("joined push has no envelope and no on/off bit", () => {
@@ -53,4 +53,54 @@ test("wake failure propagates so the route can still return 204", async () => {
     ),
     /apns down/,
   );
+});
+
+test("APNs host order follows APNS_HOST and always includes the other environment", () => {
+  const previous = process.env.APNS_HOST;
+  process.env.APNS_HOST = "https://api.push.apple.com";
+  assert.deepEqual(apnsHosts(), [
+    "https://api.push.apple.com",
+    "https://api.sandbox.push.apple.com",
+  ]);
+  process.env.APNS_HOST = "https://api.sandbox.push.apple.com";
+  assert.deepEqual(apnsHosts(), [
+    "https://api.sandbox.push.apple.com",
+    "https://api.push.apple.com",
+  ]);
+  if (previous === undefined) {
+    delete process.env.APNS_HOST;
+  } else {
+    process.env.APNS_HOST = previous;
+  }
+});
+
+test("a stored APNs environment picks one host", () => {
+  assert.deepEqual(hostsForPush("sandbox"), ["https://api.sandbox.push.apple.com"]);
+  assert.deepEqual(hostsForPush("production"), ["https://api.push.apple.com"]);
+  assert.equal(hostsForPush(undefined).length, 2);
+});
+
+test("wake forwards the environment stored with the Mac token", async () => {
+  const seen: Array<string | undefined> = [];
+  await wakeMacOnJoin(
+    "dndsync-test",
+    async (_token, environment) => {
+      seen.push(environment);
+    },
+    async () => ({ platform: "apns", token: "abc", apnsEnvironment: "sandbox" }),
+  );
+  assert.deepEqual(seen, ["sandbox"]);
+});
+
+test("only a wrong-environment 400 is retried on the other host", () => {
+  assert.equal(
+    isWrongApnsEnvironment("400", '{"reason":"BadDeviceToken"}'),
+    true,
+  );
+  assert.equal(
+    isWrongApnsEnvironment("400", '{"reason":"BadEnvironmentKeyInToken"}'),
+    true,
+  );
+  assert.equal(isWrongApnsEnvironment("400", '{"reason":"BadTopic"}'), false);
+  assert.equal(isWrongApnsEnvironment("410", '{"reason":"Unregistered"}'), false);
 });

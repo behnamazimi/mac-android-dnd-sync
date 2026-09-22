@@ -17,6 +17,7 @@ final class PairSessionTests: XCTestCase {
 
         await session.create()
         XCTAssertTrue(forwarder.created)
+        XCTAssertEqual(forwarder.apnsEnvironments, [PairSession.apnsEnvironment])
         XCTAssertFalse(session.joined)
         XCTAssertTrue(session.createdPairForCurrentId)
 

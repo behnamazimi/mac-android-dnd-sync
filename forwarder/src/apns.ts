@@ -1,17 +1,45 @@
 import { createPrivateKey, sign } from "node:crypto";
 import { connect, type ClientHttp2Session } from "node:http2";
+import type { ApnsEnvironment } from "./store.js";
 
 const TOPIC = "com.dndsync.macos";
 const JWT_TTL_MS = 50 * 60 * 1000;
+const SANDBOX_HOST = "https://api.sandbox.push.apple.com";
+const PRODUCTION_HOST = "https://api.push.apple.com";
 
 let cachedJwt: { token: string; expiresAt: number } | null = null;
 
-function apnsHost(): string {
-  let host = (process.env.APNS_HOST || "https://api.sandbox.push.apple.com").trim();
-  if (!host.startsWith("http")) {
-    host = `https://${host}`;
+export function isApnsEnvironment(value: unknown): value is ApnsEnvironment {
+  return value === "sandbox" || value === "production";
+}
+
+export function hostsForPush(environment?: ApnsEnvironment): string[] {
+  if (environment === "production") {
+    return [PRODUCTION_HOST];
   }
-  return host.replace(/\/$/, "");
+  if (environment === "sandbox") {
+    return [SANDBOX_HOST];
+  }
+  return [...apnsHosts()];
+}
+
+export function apnsHosts(): [string, string] {
+  const configured = (process.env.APNS_HOST || SANDBOX_HOST).trim().replace(/\/$/, "");
+  const preferred = configured.startsWith("http") ? configured : `https://${configured}`;
+  if (preferred === PRODUCTION_HOST) {
+    return [PRODUCTION_HOST, SANDBOX_HOST];
+  }
+  return [SANDBOX_HOST, PRODUCTION_HOST];
+}
+
+export function isWrongApnsEnvironment(status: string, responseBody: string): boolean {
+  if (status !== "400") {
+    return false;
+  }
+  return (
+    responseBody.includes("BadDeviceToken") ||
+    responseBody.includes("BadEnvironmentKeyInToken")
+  );
 }
 
 function normalizeP8(raw: string): string {
@@ -72,30 +100,67 @@ export function silentPushBody(fields: Record<string, unknown>): string {
   });
 }
 
-export async function sendJoinedApns(deviceTokenHex: string): Promise<void> {
-  await postSilentApns(deviceTokenHex, silentPushBody({ joined: true }));
+export async function sendJoinedApns(
+  deviceTokenHex: string,
+  environment?: ApnsEnvironment,
+): Promise<void> {
+  await postSilentApns(deviceTokenHex, silentPushBody({ joined: true }), environment);
 }
 
 export async function sendSilentApns(
   deviceTokenHex: string,
   envelopeB64: string,
+  environment?: ApnsEnvironment,
 ): Promise<void> {
   await postSilentApns(
     deviceTokenHex,
     silentPushBody({ envelope_b64: envelopeB64 }),
+    environment,
   );
 }
 
 async function postSilentApns(
   deviceTokenHex: string,
   body: string,
+  environment?: ApnsEnvironment,
 ): Promise<void> {
   const jwt = makeJwt();
   if (Buffer.byteLength(body, "utf8") > 4096) {
     throw new Error("APNs payload exceeds 4 KiB");
   }
   const token = deviceTokenHex.trim().replace(/\s+/g, "");
-  const client: ClientHttp2Session = connect(apnsHost());
+  const hosts = hostsForPush(environment);
+  let last: Error | undefined;
+  for (let i = 0; i < hosts.length; i++) {
+    try {
+      await postOnce(hosts[i], token, body, jwt);
+      return;
+    } catch (error) {
+      if (!(error instanceof ApnsStatusError) || !error.wrongEnvironment || i === hosts.length - 1) {
+        throw error;
+      }
+      last = error;
+    }
+  }
+  throw last ?? new Error("APNs failed");
+}
+
+class ApnsStatusError extends Error {
+  readonly wrongEnvironment: boolean;
+
+  constructor(status: string, responseBody: string) {
+    super(`APNs ${status}${responseBody ? `: ${responseBody}` : ""}`);
+    this.wrongEnvironment = isWrongApnsEnvironment(status, responseBody);
+  }
+}
+
+async function postOnce(
+  host: string,
+  token: string,
+  body: string,
+  jwt: string,
+): Promise<void> {
+  const client: ClientHttp2Session = connect(host);
   try {
     const { status, responseBody } = await new Promise<{
       status: string;
@@ -127,7 +192,7 @@ async function postSilentApns(
       req.end(body);
     });
     if (status !== "200") {
-      throw new Error(`APNs ${status}${responseBody ? `: ${responseBody}` : ""}`);
+      throw new ApnsStatusError(status, responseBody);
     }
   } finally {
     client.close();
