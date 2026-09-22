@@ -1,5 +1,7 @@
 package com.dndsync.android.cloud
 
+import android.util.Log
+import com.dndsync.android.BuildConfig
 import com.dndsync.android.pair.PairForwarder
 import com.dndsync.android.sync.SyncCloud
 import okhttp3.MediaType.Companion.toMediaType
@@ -95,7 +97,7 @@ class ForwarderClient @Inject constructor() : PairForwarder, SyncCloud {
                 .header("Authorization", "Bearer $secret")
                 .build(),
             setOf(200),
-        )
+        ).body
         val devices = JSONObject(payload).optJSONArray("devices") ?: JSONArray()
         return buildList {
             for (i in 0 until devices.length()) {
@@ -111,13 +113,23 @@ class ForwarderClient @Inject constructor() : PairForwarder, SyncCloud {
     }
 
     override fun postEnvelope(baseUrl: String, pairId: String, secret: String, envelope: ByteArray) {
-        execute(
+        val result = execute(
             request(baseUrl, "/v1/pairs/$pairId/envelopes")
                 .post(envelope.toRequestBody(PROTOBUF))
                 .header("Authorization", "Bearer $secret")
                 .build(),
             setOf(204),
         )
+        if (BuildConfig.DEBUG) {
+            val host = result.header("X-Apns-Host").ifEmpty { "missing" }
+            val id = result.header("X-Apns-Id").ifEmpty { "missing" }
+            val suffix = result.header("X-Apns-Token-Suffix").ifEmpty { "missing" }
+            val push = result.header("X-Apns-Push-Type").ifEmpty { "missing" }
+            Log.d(
+                "DndSync",
+                "[DEBUG] apns host=$host id=$id token=…$suffix push=$push",
+            )
+        }
     }
 
     override fun deletePair(baseUrl: String, pairId: String, secret: String) {
@@ -141,7 +153,11 @@ class ForwarderClient @Inject constructor() : PairForwarder, SyncCloud {
     private fun jsonBody(body: JSONObject) =
         body.toString().toRequestBody(JSON)
 
-    private fun execute(request: Request, expect: Set<Int>): String {
+    private class CallResult(val body: String, private val headers: okhttp3.Headers) {
+        fun header(name: String): String = headers[name].orEmpty()
+    }
+
+    private fun execute(request: Request, expect: Set<Int>): CallResult {
         client.newCall(request).execute().use { response ->
             val body = response.body?.string().orEmpty()
             if (response.code !in expect) {
@@ -151,7 +167,7 @@ class ForwarderClient @Inject constructor() : PairForwarder, SyncCloud {
                     ForwarderException.Http(response.code, body)
                 }
             }
-            return body
+            return CallResult(body, response.headers)
         }
     }
 

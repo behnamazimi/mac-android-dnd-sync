@@ -143,4 +143,16 @@ final class DndStateFixtureTests: XCTestCase {
         XCTAssertEqual(parsed.macDeviceName, "Studio Mac")
         XCTAssertEqual(parsed, payload)
     }
+
+    func testLanAckRoundTripDoesNotDecodeAsStateOrUnpair() throws {
+        let ack = LanAckFrames.make(unixMs: 1_700_000_000_000)
+        let bytes = try ack.serializedData()
+        let decoded = try XCTUnwrap(LanAckFrames.decode(bytes))
+        XCTAssertEqual(decoded.version, LanAckFrames.version)
+        XCTAssertEqual(decoded.unixMs, 1_700_000_000_000)
+        XCTAssertNil(DndStateFrames.decode(bytes))
+        XCTAssertNil(PairControlFrames.decode(bytes))
+        let state = DndStateFrames.make(on: true, unixMs: 1_700_000_000_000, sender: "android")
+        XCTAssertNil(LanAckFrames.decode(try state.serializedData()))
+    }
 }

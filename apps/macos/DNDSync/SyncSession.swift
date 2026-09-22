@@ -44,12 +44,15 @@ final class SyncSession {
             "Last inbound: on=\(state.on) unix_ms=\(state.unixMs) sender=\(state.sender)"
         publish()
         if gate.onRemote(state) {
+            debug("apply on=\(state.on) unix_ms=\(state.unixMs) viaLan=\(viaLan)")
             pair.persistLastSync(
                 unixMs: state.unixMs,
                 on: state.on,
                 sender: state.sender,
                 viaLan: viaLan
             )
+        } else {
+            debug("drop on=\(state.on) unix_ms=\(state.unixMs) viaLan=\(viaLan)")
         }
     }
 
@@ -58,13 +61,16 @@ final class SyncSession {
     }
 
     func onInboundEnvelope(_ envelope: Dndsync_V1_CloudEnvelope) {
+        debug("cloud envelope kind=\(envelope.payloadKind) sender=\(envelope.sender)")
         let plaintext: Data
         if pair.joined {
             if let opened = pair.open(envelope.ciphertext) {
                 plaintext = opened
             } else if envelope.payloadKind == CloudEnvelopeCodec.payloadPairControl {
+                debug("cloud drop pair-control decrypt")
                 return
             } else {
+                debug("cloud drop decrypt")
                 pair.noteCloudError("decrypt failed")
                 return
             }
@@ -80,10 +86,17 @@ final class SyncSession {
             return
         }
         guard let state = DndStateFrames.decode(plaintext) else {
+            debug("cloud drop invalid DndState")
             pair.noteCloudError("invalid inner DndState")
             return
         }
         onInboundState(state, viaLan: false)
+    }
+
+    private func debug(_ message: String) {
+        #if DEBUG
+        print("[DEBUG] \(message)")
+        #endif
     }
 
     func sendUnpair(_ context: UnpairContext) {
@@ -118,13 +131,12 @@ final class SyncSession {
     private func wire() {
         gate.onOriginate = { [weak self] state in
             guard let self, self.pair.joined else { return }
-            self.lan.send(state)
             self.postEnvelope(state)
             self.pair.persistLastSync(
                 unixMs: state.unixMs,
                 on: state.on,
                 sender: state.sender,
-                viaLan: self.lanConnected
+                viaLan: false
             )
         }
         gate.onApplyRemote = { [weak self] on in
@@ -133,7 +145,6 @@ final class SyncSession {
         lan.onUiState = { [weak self] snapshot in
             Task { @MainActor in
                 guard let self else { return }
-                let dropped = self.lanConnected && !snapshot.connected
                 self.lanAdvertising = snapshot.advertising
                 self.lanBrowsing = snapshot.browsing
                 self.lanConnected = snapshot.connected
@@ -143,9 +154,6 @@ final class SyncSession {
                     self.lastLanErrorText = "Last LAN error: —"
                 }
                 self.publish()
-                if dropped, self.pair.joined {
-                    await self.pair.refreshPairOrUnpair()
-                }
             }
         }
         lan.onInbound = { [weak self] state in

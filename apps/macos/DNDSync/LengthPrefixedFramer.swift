@@ -84,6 +84,31 @@ enum UnpairPolicy {
     }
 }
 
+enum LanAckFrames {
+    static let version = LanConstants.lanAckVersion
+
+    static func make(unixMs: Int64) -> Dndsync_V1_LanAck {
+        var ack = Dndsync_V1_LanAck()
+        ack.version = version
+        ack.unixMs = unixMs
+        return ack
+    }
+
+    static func encode(_ ack: Dndsync_V1_LanAck) throws -> Data {
+        try LengthPrefixedFramer.frame(ack.serializedData())
+    }
+
+    static func decode(_ payload: Data) -> Dndsync_V1_LanAck? {
+        guard let ack = try? Dndsync_V1_LanAck(serializedBytes: payload) else {
+            return nil
+        }
+        guard ack.version == version else {
+            return nil
+        }
+        return ack
+    }
+}
+
 enum DndStateFrames {
     static func encode(_ state: Dndsync_V1_DndState) throws -> Data {
         try LengthPrefixedFramer.frame(state.serializedData())

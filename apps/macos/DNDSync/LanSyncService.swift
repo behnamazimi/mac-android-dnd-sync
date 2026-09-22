@@ -15,7 +15,6 @@ final class LanSyncService {
 
     private let queue = DispatchQueue(label: "com.dndsync.macos.lan")
     private var listener: NWListener?
-    private var browser: NWBrowser?
     private var connection: NWConnection?
     private var accumulator = LengthPrefixedFramer.Accumulator()
     private var ui = LanUiSnapshot()
@@ -76,13 +75,10 @@ final class LanSyncService {
     private func startLocked() {
         running = true
         startListener()
-        startBrowser()
     }
 
     private func stopLocked() {
         running = false
-        browser?.cancel()
-        browser = nil
         listener?.cancel()
         listener = nil
         dropConnection(reason: nil)
@@ -118,25 +114,6 @@ final class LanSyncService {
         }
     }
 
-    private func startBrowser() {
-        let browser = NWBrowser(
-            for: .bonjourWithTXTRecord(type: LanConstants.serviceType, domain: nil),
-            using: .tcp
-        )
-        browser.stateUpdateHandler = { [weak self] state in
-            self?.queue.async {
-                self?.handleBrowserState(state)
-            }
-        }
-        browser.browseResultsChangedHandler = { [weak self] results, _ in
-            self?.queue.async {
-                self?.handleBrowseResults(results)
-            }
-        }
-        self.browser = browser
-        browser.start(queue: queue)
-    }
-
     private func handleListenerState(_ state: NWListener.State) {
         switch state {
         case .ready:
@@ -151,59 +128,6 @@ final class LanSyncService {
         default:
             break
         }
-    }
-
-    private func handleBrowserState(_ state: NWBrowser.State) {
-        switch state {
-        case .ready:
-            ui.browsing = true
-            publishUi()
-        case .failed(let error):
-            ui.browsing = false
-            fail("browser: \(error.localizedDescription)")
-        case .cancelled:
-            ui.browsing = false
-            publishUi()
-        default:
-            break
-        }
-    }
-
-    private func handleBrowseResults(_ results: Set<NWBrowser.Result>) {
-        // Mac never dials. Prefer IPv4 when both families appear so the
-        // debug UI reflects the address Android is likely to use.
-        var ipv4Peer = false
-        var anyPeer = false
-        for result in results {
-            guard isMatchingPeer(result) else { continue }
-            anyPeer = true
-            if endpointIsIPv4(result.endpoint) {
-                ipv4Peer = true
-            }
-        }
-        _ = ipv4Peer || anyPeer
-    }
-
-    private func isMatchingPeer(_ result: NWBrowser.Result) -> Bool {
-        guard case .service(let name, _, _, _) = result.endpoint else {
-            return false
-        }
-        if name == LanConstants.macInstanceName {
-            return false
-        }
-        if case .bonjour(let txt) = result.metadata {
-            return txt[LanConstants.pairTxtKey] == pairId
-        }
-        return false
-    }
-
-    private func endpointIsIPv4(_ endpoint: NWEndpoint) -> Bool {
-        if case .hostPort(let host, _) = endpoint {
-            if case .ipv4 = host {
-                return true
-            }
-        }
-        return false
     }
 
     private func accept(_ incoming: NWConnection) {
@@ -252,7 +176,10 @@ final class LanSyncService {
                         for payload in payloads {
                             if let control = PairControlFrames.decode(payload) {
                                 self.onInboundUnpair?(control)
+                            } else if LanAckFrames.decode(payload) != nil {
+                                continue
                             } else if let state = DndStateFrames.decode(payload) {
+                                self.sendAckLocked(unixMs: state.unixMs, on: connection)
                                 self.onInbound?(state)
                             }
                         }
@@ -273,6 +200,15 @@ final class LanSyncService {
                     self.receive(on: connection)
                 }
             }
+        }
+    }
+
+    private func sendAckLocked(unixMs: Int64, on connection: NWConnection) {
+        do {
+            let data = try LanAckFrames.encode(LanAckFrames.make(unixMs: unixMs))
+            connection.send(content: data, completion: .contentProcessed { _ in })
+        } catch {
+            fail("ack failed: \(error.localizedDescription)")
         }
     }
 

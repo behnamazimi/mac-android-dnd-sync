@@ -2,6 +2,7 @@ import { getFirestore, FieldValue, type Timestamp } from "firebase-admin/firesto
 
 export type Sender = "mac" | "android";
 export type Platform = "apns" | "fcm";
+export type ApnsEnvironment = "sandbox" | "production";
 
 export type PairRecord = {
   secretHash: string;
@@ -13,6 +14,7 @@ export type DeviceRecord = {
   platform: Platform;
   token: string;
   e2ePublicKey?: string;
+  apnsEnvironment?: ApnsEnvironment;
   updatedAt?: Timestamp;
 };
 
@@ -54,7 +56,12 @@ export async function createPair(
 export async function upsertDevice(
   pairId: string,
   sender: Sender,
-  record: { platform: Platform; token: string; e2ePublicKey?: string },
+  record: {
+    platform: Platform;
+    token: string;
+    e2ePublicKey?: string;
+    apnsEnvironment?: ApnsEnvironment;
+  },
 ): Promise<void> {
   const payload: Record<string, unknown> = {
     platform: record.platform,
@@ -63,6 +70,9 @@ export async function upsertDevice(
   };
   if (record.e2ePublicKey !== undefined) {
     payload.e2ePublicKey = record.e2ePublicKey;
+  }
+  if (record.apnsEnvironment !== undefined) {
+    payload.apnsEnvironment = record.apnsEnvironment;
   }
   await deviceRef(pairId, sender).set(payload, { merge: true });
 }

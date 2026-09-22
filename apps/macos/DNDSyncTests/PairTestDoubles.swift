@@ -15,6 +15,7 @@ final class FakePairForwarder: PairForwarder {
     var deleted = false
     var envelopes: [Data] = []
     var registeredTokens: [String] = []
+    var apnsEnvironments: [String] = []
     var error: Error?
 
     func registerDevice(
@@ -24,10 +25,12 @@ final class FakePairForwarder: PairForwarder {
         sender: String,
         platform: String,
         token: String,
-        e2ePublicKey: String?
+        e2ePublicKey: String?,
+        apnsEnvironment: String
     ) async throws {
         if let error { throw error }
         registeredTokens.append(token)
+        apnsEnvironments.append(apnsEnvironment)
     }
 
     func createPair(
@@ -38,10 +41,12 @@ final class FakePairForwarder: PairForwarder {
         sender: String,
         platform: String,
         token: String,
-        e2ePublicKey: String?
+        e2ePublicKey: String?,
+        apnsEnvironment: String
     ) async throws {
         if let error { throw error }
         created = true
+        apnsEnvironments.append(apnsEnvironment)
     }
 
     func listDevices(

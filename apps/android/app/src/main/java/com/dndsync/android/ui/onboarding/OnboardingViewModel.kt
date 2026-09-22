@@ -10,7 +10,6 @@ import com.dndsync.android.dnd.DndApply
 import com.dndsync.android.dnd.DndApplySnapshot
 import com.dndsync.android.pair.CloudUiState
 import com.dndsync.android.pair.PairSession
-import com.dndsync.android.sync.SyncSession
 import com.dndsync.android.ui.designsystem.ConnectionPath
 import com.dndsync.android.ui.navigation.AndroidDestination
 import com.dndsync.android.ui.navigation.AndroidRouting
@@ -39,7 +38,6 @@ private data class Local(
 class OnboardingViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val dndApply: DndApply,
-    private val syncSession: SyncSession,
     private val pairSession: PairSession,
     private val prefsStore: OnboardingPrefsStore,
 ) : ViewModel() {
@@ -57,11 +55,10 @@ class OnboardingViewModel @Inject constructor(
     val uiState: StateFlow<OnboardingUiState> = combine(
         dndApply.snapshot,
         combine(notificationsGranted, cameraGranted) { n, c -> Grants(n, c) },
-        combine(pairSession.ui, syncSession.lanUi) { cloud, lan -> cloud to lan },
+        pairSession.ui,
         local,
-    ) { snap, grants, cloudAndLan, loc ->
-        val (cloud, lan) = cloudAndLan
-        toUiState(snap, grants, cloud, lan.connected, loc)
+    ) { snap, grants, cloud, loc ->
+        toUiState(snap, grants, cloud, loc)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
@@ -97,7 +94,6 @@ class OnboardingViewModel @Inject constructor(
         snap: DndApplySnapshot,
         grants: Grants,
         cloud: CloudUiState,
-        lanConnected: Boolean,
         loc: Local,
     ) = OnboardingUiState(
         policyAccessGranted = snap.policyAccessGranted,
@@ -113,7 +109,7 @@ class OnboardingViewModel @Inject constructor(
         pairError = cloud.pairError,
         peerDeviceName = cloud.macDeviceName.ifBlank { "Mac" },
         connectionPath = when {
-            lanConnected -> ConnectionPath.Lan
+            cloud.lastSyncViaLan -> ConnectionPath.Lan
             cloud.joinSucceeded -> ConnectionPath.Cloud
             else -> ConnectionPath.None
         },

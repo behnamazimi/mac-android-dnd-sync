@@ -4,6 +4,7 @@ package com.dndsync.android.sync
 object Wire {
     const val PROTO_VERSION = 1
     const val PAIR_CONTROL_VERSION = 2
+    const val LAN_ACK_VERSION = 3
     const val SENDER_MAC = "mac"
     const val SENDER_ANDROID = "android"
     const val ECHO_WINDOW_MS = 1_000L

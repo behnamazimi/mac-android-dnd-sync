@@ -8,14 +8,16 @@ import {
   safeEqualHex,
   sha256Hex,
 } from "./auth.js";
-import { sendSilentApns } from "./apns.js";
+import { isApnsEnvironment, sendJoinedApns, sendSilentApns } from "./apns.js";
 import { sendDataFcm } from "./fcm.js";
+import { wakeMacOnJoin } from "./join_wake.js";
 import {
   createPair,
   deletePair,
   getDevice,
   listDevicePublicKeys,
   upsertDevice,
+  type ApnsEnvironment,
   type Platform,
   type Sender,
 } from "./store.js";
@@ -28,6 +30,16 @@ function isSender(value: unknown): value is Sender {
 
 function isPlatform(value: unknown): value is Platform {
   return value === "apns" || value === "fcm";
+}
+
+function apnsEnvironmentOf(body: {
+  platform?: string;
+  apns_environment?: string;
+}): ApnsEnvironment | undefined {
+  if (body.platform !== "apns" || !isApnsEnvironment(body.apns_environment)) {
+    return undefined;
+  }
+  return body.apns_environment;
 }
 
 function otherSender(sender: Sender): Sender {
@@ -49,6 +61,7 @@ app.post("/v1/pairs", async (c) => {
     platform?: string;
     token?: string;
     e2e_public_key?: string;
+    apns_environment?: string;
   }>();
   const pairId = body.pair_id?.trim() ?? "";
   const secretHash = body.secret_hash?.trim() ?? "";
@@ -63,6 +76,7 @@ app.post("/v1/pairs", async (c) => {
     platform: body.platform,
     token: body.token,
     e2ePublicKey: body.e2e_public_key,
+    apnsEnvironment: apnsEnvironmentOf(body),
   });
   return c.body(null, 201);
 });
@@ -82,6 +96,7 @@ app.post("/v1/pairs/:pairId/join", async (c) => {
     platform?: string;
     token?: string;
     e2e_public_key?: string;
+    apns_environment?: string;
   }>();
   if (!isSender(body.sender) || !isPlatform(body.platform) || !body.token) {
     return c.json({ error: "invalid device" }, 400);
@@ -90,7 +105,16 @@ app.post("/v1/pairs/:pairId/join", async (c) => {
     platform: body.platform,
     token: body.token,
     e2ePublicKey: body.e2e_public_key,
+    apnsEnvironment: apnsEnvironmentOf(body),
   });
+  if (body.sender === "android") {
+    try {
+      await wakeMacOnJoin(pairId, sendJoinedApns);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "join wake failed";
+      console.error("join wake failed", message);
+    }
+  }
   return c.body(null, 204);
 });
 
@@ -133,6 +157,7 @@ app.put("/v1/pairs/:pairId/devices", async (c) => {
     platform?: string;
     token?: string;
     e2e_public_key?: string;
+    apns_environment?: string;
   }>();
   if (!isSender(body.sender) || !isPlatform(body.platform) || !body.token) {
     return c.json({ error: "invalid device" }, 400);
@@ -141,6 +166,7 @@ app.put("/v1/pairs/:pairId/devices", async (c) => {
     platform: body.platform,
     token: body.token,
     e2ePublicKey: body.e2e_public_key,
+    apnsEnvironment: apnsEnvironmentOf(body),
   });
   return c.body(null, 204);
 });
@@ -177,8 +203,12 @@ app.post("/v1/pairs/:pairId/envelopes", async (c) => {
   }
   const peer = await getDevice(pairId, otherSender(envelope.sender));
   if (!peer?.token) {
+    console.error(`[DEBUG] envelope sender=${envelope.sender} peer has no token`);
     return c.json({ error: "peer not registered" }, 409);
   }
+  console.log(
+    `[DEBUG] envelope sender=${envelope.sender} peer=${peer.platform} apns=${peer.apnsEnvironment ?? "unset"}`,
+  );
   const envelopeB64 = Buffer.from(bytes).toString("base64");
   const previewSize = Buffer.byteLength(
     JSON.stringify({
@@ -192,7 +222,11 @@ app.post("/v1/pairs/:pairId/envelopes", async (c) => {
   }
   try {
     if (peer.platform === "apns") {
-      await sendSilentApns(peer.token, envelopeB64);
+      const delivery = await sendSilentApns(peer.token, envelopeB64, peer.apnsEnvironment);
+      c.header("X-Apns-Host", delivery.host);
+      c.header("X-Apns-Id", delivery.apnsId);
+      c.header("X-Apns-Token-Suffix", delivery.tokenSuffix);
+      c.header("X-Apns-Push-Type", delivery.pushType);
     } else if (peer.platform === "fcm") {
       await sendDataFcm(peer.token, envelopeB64);
     } else {

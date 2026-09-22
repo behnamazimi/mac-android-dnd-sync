@@ -5,12 +5,13 @@ Guidance for AI coding agents working in this repository.
 ## What this repo is
 
 Mac & Android DND Sync keeps Do Not Disturb / Focus state in sync between a
-macOS menu-bar app and an Android app. Same Wi-Fi uses Bonjour/NSD for a
-direct LAN connection. Off-LAN uses a request/response push forwarder (FCM to
-Android, silent APNs to Mac) backed by a small Firebase Cloud Function. There
-is no cloud relay of state and no persistent Mac socket. The cloud path is a
-wake-and-pull, not a live channel. Firestore stores only pairing secrets and
-push tokens, never an on/off bit.
+macOS menu-bar app and an Android app. On the same Wi-Fi the phone discovers
+the Mac, sends one `DndState`, waits for a `LanAck`, and closes. A Mac flip
+always uses push, including on the same Wi-Fi. Off-LAN uses a request/response
+push forwarder (FCM to Android, silent APNs to Mac) backed by a small Firebase
+Cloud Function. There is no cloud relay of state and no persistent connection
+between the two apps. The cloud path is a wake-and-pull, not a live channel.
+Firestore stores only pairing secrets and push tokens, never an on/off bit.
 
 The product surface is intentionally minimal: users flip the system DND
 control on either device and the other follows. Neither app exposes a third,
@@ -249,16 +250,22 @@ secrets-apns-p8` sets `APNS_P8` from `scripts/apns-send/AuthKey.p8`.
 **Redeploy after changing any secret.** The function reads secret versions
 at deploy time, not on every request.
 
-`APNS_HOST` is `https://api.sandbox.push.apple.com` while the Mac app runs
-from Xcode Debug, or `https://api.push.apple.com` once it runs from a
-Developer ID (or App Store) export. Apple issues a different device token
-per environment, and sending it to the wrong host fails closed
-(`BadDeviceToken` / `BadEnvironmentKeyInToken`).
+`APNS_HOST` is only the fallback order for a Mac that registered before it
+started reporting an environment. A Debug build sends `sandbox` with its
+token and a Developer ID or App Store build sends `production`. The
+forwarder stores that next to the token and posts to the matching Apple
+host. The Mac wake is an alert-priority push (`apns-priority` 10). A
+background priority-5 push is accepted by Apple and then not delivered to
+this menu-bar app. The app discards that notification. A record with no
+environment still tries `APNS_HOST` first and, on
+`BadDeviceToken` or `BadEnvironmentKeyInToken`, the other host once. Apple
+still issues a different device token per environment.
 
-Firestore stores `secretHash` and device push tokens only, never an on/off
-bit. Deleting a pair (`DELETE /v1/pairs/:pairId`, same bearer token as
-`join`) already happens automatically when a client unpairs; there's no
-separate admin script.
+Firestore stores `secretHash`, device push tokens, and for the Mac the
+APNs environment that issued the token (`sandbox` or `production`). It
+never stores an on/off bit. Deleting a pair (`DELETE /v1/pairs/:pairId`,
+same bearer token as `join`) already happens automatically when a client
+unpairs; there's no separate admin script.
 
 Release and CI notes live in [CONTRIBUTING.md](CONTRIBUTING.md).
 
@@ -277,10 +284,15 @@ device.
   never shows it). Must see: the Quick Settings DND tile or harness state
   flips; a manual-tile veto still fires the existing failed-off
   notification.
-- **Phase 4 — same-Wi-Fi sync.** Bonjour/NSD finds the peer, one TCP
-  connection carries a length-prefixed `DndState`. Must see: both apps show
-  **connected** (not just advertising); flips in either direction follow
-  within seconds; rapid flips or a vetoed Android off don't ping-pong.
+- **Phase 4 — same-Wi-Fi sync.** The Mac listens and advertises. The phone
+  does not. When Nearby is granted, a phone flip resolves the Mac, opens one
+  TCP connection, sends a length-prefixed `DndState`, and closes after a
+  `LanAck` for that `unix_ms` (about 2 seconds, then cloud). A Mac flip always
+  posts an envelope, including on the same Wi-Fi. Must see: a phone flip
+  follows within seconds without a Cloud Function call when the ACK lands;
+  a Mac flip still arrives by push; rapid flips or a vetoed Android off
+  don't ping-pong. The Nearby chip is the last completed path, not a live
+  socket.
 - **Phase 5 — Mac APNs harness.** A scripted silent push
   (`content-available`, no banner/sound/badge) applies Focus the same way
   loopback does. `make apns TOKEN=… CMD=on|off` needs `APNS_KEY_ID` /
@@ -291,8 +303,11 @@ device.
   deployed forwarder; a flip on one reaches the other in ~10s over cellular
   / off that Wi-Fi. Must see: Firestore has `secretHash` and both device
   tokens, no on/off field; breaking the URL fails closed with a cloud error,
-  no retry storm; putting both devices back on the same Wi-Fi still works
-  and doesn't ping-pong against the cloud path.
+  no retry storm; a same-Wi-Fi phone flip does not also call the function
+  when the LAN ACK lands, and coming back to that Wi-Fi doesn't ping-pong
+  against the cloud path. `POST /join` sends one silent APNs `joined` marker
+  so the Mac fetches the phone's key once; join still returns 204 if that
+  push fails.
 - **Phase 6.B — pairing and E2E.** Real QR/paste pairing replaces the
   hardcoded 6.A pair. Must see: ciphertext on the wire, not plaintext
   `DndState`; **Re-pair** invalidates the old bearer token (401).
