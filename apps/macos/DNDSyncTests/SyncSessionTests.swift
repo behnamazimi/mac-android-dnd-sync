@@ -151,7 +151,7 @@ final class SyncSessionTests: XCTestCase {
         let pair = FakeSyncPairing()
         pair.joined = true
         let session = SyncSession(lan: lan, cloud: cloud, pair: pair)
-        session.sendUnpair(
+        await session.sendUnpair(
             UnpairContext(
                 pairId: "dndsync-test",
                 pairSecret: "secret",
@@ -159,7 +159,6 @@ final class SyncSessionTests: XCTestCase {
                 aesKey: nil
             )
         )
-        try? await Task.sleep(nanoseconds: 20_000_000)
 
         XCTAssertEqual(lan.unpairs.count, 1)
         XCTAssertEqual(lan.unpairs[0].pairID, "dndsync-test")
@@ -167,11 +166,11 @@ final class SyncSessionTests: XCTestCase {
         XCTAssertTrue(cloud.deleted)
     }
 
-    func testSendUnpairStillSendsLanWithoutForwarder() {
+    func testSendUnpairStillSendsLanWithoutForwarder() async {
         let lan = InMemorySyncLan()
         let cloud = InMemorySyncCloud()
         let session = SyncSession(lan: lan, cloud: cloud, pair: FakeSyncPairing())
-        session.sendUnpair(
+        await session.sendUnpair(
             UnpairContext(
                 pairId: "dndsync-test",
                 pairSecret: "",

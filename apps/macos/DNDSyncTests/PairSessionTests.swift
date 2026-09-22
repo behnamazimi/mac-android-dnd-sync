@@ -86,16 +86,23 @@ final class PairSessionTests: XCTestCase {
 
         XCTAssertTrue(session.joined)
         session.unpair(notifyPeer: false)
+        for _ in 0..<50 where !forwarder.deleted {
+            await Task.yield()
+        }
 
         XCTAssertFalse(session.joined)
+        XCTAssertTrue(forwarder.deleted)
     }
 
-    func testUnpairNotifiesPeerWhenJoined() {
+    func testUnpairNotifiesPeerWhenJoined() async {
         let session = joinedSession(forwarder: FakePairForwarder(), store: InMemoryPairStore())
         var notified: UnpairContext?
         session.onNotifyPeerUnpair = { notified = $0 }
 
         session.unpair(notifyPeer: true)
+        for _ in 0..<50 where notified == nil {
+            await Task.yield()
+        }
 
         XCTAssertEqual(notified?.pairId, "dndsync-abc")
         XCTAssertEqual(notified?.pairSecret, "secret")

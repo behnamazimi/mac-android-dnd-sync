@@ -155,6 +155,13 @@ class PairSession(
         val context = unpairContext()
         if (context != null && UnpairPolicy.shouldNotifyPeer(notifyPeer, joinSucceeded)) {
             onNotifyPeerUnpair?.invoke(context)
+        } else if (context != null) {
+            scope.launch {
+                try {
+                    forwarder.deletePair(context.forwarderUrl, context.pairId, context.pairSecret)
+                } catch (_: Exception) {
+                }
+            }
         }
         clearLocalPair()
     }

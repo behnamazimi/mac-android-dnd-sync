@@ -37,6 +37,7 @@ class PairSessionTests {
 
         assertFalse(session.joined)
         assertFalse(session.hasStoredPair)
+        assertTrue(forwarder.deleted)
     }
 
     @Test

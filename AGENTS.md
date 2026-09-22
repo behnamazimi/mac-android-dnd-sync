@@ -221,10 +221,14 @@ one notification per incident and opens Modes settings.
 - A missing `google-services.json` still builds the Android app; the Google
   services Gradle plugin only applies when that file exists, so FCM stays
   unregistered until you add it and rebuild.
-- **Unpair** is not a full factory reset. It clears the pair, not: Mac
+- **Unpair** deletes that pair from Firestore, including a pair the phone
+  never joined. It is not a full factory reset. It does not clear: Mac
   Keychain login-item state, the "seen welcome" flag, Shortcuts.app entries,
   or Android's system DND access grant. To start clean, also remove those by
   hand.
+- A Debug Mac always writes the pair document `dndsync-dev` and replaces
+  whatever was stored there, including the phone's device record. Release
+  builds keep a new id per pair.
 - Closing a Mac window hides it; it does not quit the app (LAN, APNs, and
   the pair session keep running). Quit from the menu-bar right-click menu or
   ⌘Q.

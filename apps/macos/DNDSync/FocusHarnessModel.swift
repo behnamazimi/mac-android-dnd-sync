@@ -179,7 +179,7 @@ final class FocusHarnessModel {
             self?.readyAtSessionStart = false
         }
         pair.onNotifyPeerUnpair = { [weak self] context in
-            self?.sync.sendUnpair(context)
+            await self?.sync.sendUnpair(context)
         }
         sync.onApplyRemote = { [weak self] on in
             guard let self else { return }
