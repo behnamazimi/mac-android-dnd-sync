@@ -124,6 +124,6 @@ object ProductCopy {
  * asset URLs change every tag.
  */
 object Distribution {
-    const val GITHUB_REPO = "https://github.com/behnamazimi/mac-android-dnd-sync"
-    const val GITHUB_RELEASES = "https://github.com/behnamazimi/mac-android-dnd-sync/releases/latest"
+    const val GITHUB_REPO = "https://github.com/behnamazimi/mac-android-focus-sync"
+    const val GITHUB_RELEASES = "https://github.com/behnamazimi/mac-android-focus-sync/releases/latest"
 }

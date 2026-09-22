@@ -107,8 +107,8 @@ enum ProductCopy {
 /// root is About's source link. `/releases/latest` over a per-asset link since
 /// asset URLs change every tag.
 enum Distribution {
-    static let githubRepo = URL(string: "https://github.com/behnamazimi/mac-android-dnd-sync")!
-    static let githubReleases = URL(string: "https://github.com/behnamazimi/mac-android-dnd-sync/releases/latest")!
+    static let githubRepo = URL(string: "https://github.com/behnamazimi/mac-android-focus-sync")!
+    static let githubReleases = URL(string: "https://github.com/behnamazimi/mac-android-focus-sync/releases/latest")!
 }
 
 enum MacDestination: Equatable, Hashable {

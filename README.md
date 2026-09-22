@@ -17,7 +17,7 @@ no extra switch in the app.
 ## Install
 
 Download the `.dmg` and `.apk` from the
-[latest GitHub Release](https://github.com/behnamazimi/mac-android-dnd-sync/releases/latest).
+[latest GitHub Release](https://github.com/behnamazimi/mac-android-focus-sync/releases/latest).
 
 <!-- prettier-ignore -->
 > [!NOTE]
