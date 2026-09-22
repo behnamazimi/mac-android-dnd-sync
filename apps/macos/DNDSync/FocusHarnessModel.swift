@@ -173,7 +173,6 @@ final class FocusHarnessModel {
         pair.onJoined = { [weak self] in
             self?.readyAtSessionStart = true
             self?.sync.startLANIfJoined()
-            self?.pair.startPairedWatch()
         }
         pair.onCleared = { [weak self] in
             self?.sync.stopLAN()
@@ -205,6 +204,12 @@ final class FocusHarnessModel {
             Task { @MainActor in
                 let kind = userInfo["envelope_b64"] != nil ? "envelope" : "received"
                 self?.lastApnsText = "Last APNs: \(kind)"
+            }
+        }
+        apns.onJoinedWake = { [weak self] in
+            Task { @MainActor in
+                guard let self, !self.pair.joined else { return }
+                await self.pair.fetchPeer()
             }
         }
         apns.onEnvelope = { [weak self] envelope in
@@ -253,7 +258,6 @@ final class FocusHarnessModel {
         }
         if pair.joined {
             sync.startLANIfJoined()
-            pair.startPairedWatch()
         }
         readyAtSessionStart = paired
         refreshOffline()

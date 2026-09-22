@@ -65,15 +65,32 @@ function makeJwt(): string {
   return token;
 }
 
+export function silentPushBody(fields: Record<string, unknown>): string {
+  return JSON.stringify({
+    aps: { "content-available": 1 },
+    ...fields,
+  });
+}
+
+export async function sendJoinedApns(deviceTokenHex: string): Promise<void> {
+  await postSilentApns(deviceTokenHex, silentPushBody({ joined: true }));
+}
+
 export async function sendSilentApns(
   deviceTokenHex: string,
   envelopeB64: string,
 ): Promise<void> {
+  await postSilentApns(
+    deviceTokenHex,
+    silentPushBody({ envelope_b64: envelopeB64 }),
+  );
+}
+
+async function postSilentApns(
+  deviceTokenHex: string,
+  body: string,
+): Promise<void> {
   const jwt = makeJwt();
-  const body = JSON.stringify({
-    aps: { "content-available": 1 },
-    envelope_b64: envelopeB64,
-  });
   if (Buffer.byteLength(body, "utf8") > 4096) {
     throw new Error("APNs payload exceeds 4 KiB");
   }

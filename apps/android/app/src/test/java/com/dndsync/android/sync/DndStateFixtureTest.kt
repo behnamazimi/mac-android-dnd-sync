@@ -71,6 +71,20 @@ class DndStateFixtureTest {
         assertEquals(CloudEnvelopeCodec.PAYLOAD_PAIR_CONTROL, envelope.payloadKind)
         assertEquals(PairControl.Kind.KIND_UNPAIR, PairControlFrames.decode(envelope.ciphertext.toByteArray())!!.kind)
     }
+
+    @Test
+    fun lanAckRoundTripDoesNotDecodeAsStateOrUnpair() {
+        val ack = LanAckFrames.make(1_700_000_000_000L)
+        val bytes = ack.toByteArray()
+        val decoded = LanAckFrames.decode(bytes)
+        assertEquals(LanAckFrames.VERSION, decoded!!.version)
+        assertEquals(1_700_000_000_000L, decoded.unixMs)
+        assertEquals(null, PairControlFrames.decode(bytes))
+        val asState = DndState.parseFrom(bytes)
+        assertEquals(LanAckFrames.VERSION, asState.version)
+        val state = dndState(on = true, unixMs = 1_700_000_000_000L, sender = Wire.SENDER_ANDROID)
+        assertEquals(null, LanAckFrames.decode(state.toByteArray()))
+    }
 }
 
 class UnpairPolicyTest {

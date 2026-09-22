@@ -91,7 +91,7 @@ class HomeViewModel @Inject constructor(
             status = status,
             dndOn = DndApplyPolicy.displayOn(snap.interruptionFilter),
             connectionPath = when {
-                lan.ui.connected -> ConnectionPath.Lan
+                cloud.lastSyncViaLan -> ConnectionPath.Lan
                 cloud.joinSucceeded -> ConnectionPath.Cloud
                 else -> ConnectionPath.None
             },

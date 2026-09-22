@@ -4,14 +4,18 @@ import com.dndsync.android.lan.LanUiState
 import com.dndsync.android.pair.UnpairContext
 import com.dndsync.proto.v1.CloudEnvelope
 import com.dndsync.proto.v1.DndState
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
@@ -24,7 +28,7 @@ class SyncSession(
     private val pair: SyncPairing,
     private val nowMs: () -> Long = { System.currentTimeMillis() },
     mainDispatcher: CoroutineDispatcher = Dispatchers.Main.immediate,
-    ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
     var onApplyRemote: ((Boolean) -> Unit)? = null
 
@@ -32,6 +36,14 @@ class SyncSession(
     private val ioScope = CoroutineScope(SupervisorJob() + ioDispatcher)
     private val gate = LanSyncGate(nowMs)
     private val nearbyGranted = AtomicBoolean(false)
+    private var originGeneration = 0
+    private var currentOrigin: Origin? = null
+
+    private class Origin(val generation: Int) {
+        val cloudStarted = AtomicBoolean(false)
+        var lanJob: Job? = null
+        var cloudJob: Job? = null
+    }
 
     val lanUi: StateFlow<LanUiState> = lan.ui
 
@@ -112,15 +124,19 @@ class SyncSession(
             return
         }
         val control = PairControlFrames.unpair(pairId = context.pairId)
-        lan.sendUnpairNow(control)
         if (context.pairSecret.isEmpty() || context.forwarderUrl.isEmpty()) {
+            if (nearbyGranted.get()) {
+                runBlocking(ioDispatcher) { lan.deliverUnpair(control) }
+            }
             return
         }
-        // PairSession.unpair() stops LAN as soon as this returns. Close() on
-        // that socket can RST and drop the frame we just wrote, and a
-        // fire-and-forget POST means the Mac's APNs wake has not even been
-        // sent yet. Finish the forwarder notify first.
+        // Finish the forwarder notify before returning. PairSession.unpair()
+        // stops LAN as soon as this returns, and a missed push is the only
+        // way an off-LAN Mac learns about unpair.
         postUnpairAndDelete(context, control)
+        if (nearbyGranted.get()) {
+            runBlocking(ioDispatcher) { lan.deliverUnpair(control) }
+        }
     }
 
     fun setPairId(pairId: String) {
@@ -152,14 +168,44 @@ class SyncSession(
     private fun wire() {
         gate.onOriginate = { state ->
             if (pair.joined) {
-                lan.send(state)
-                postEnvelope(state)
-                pair.persistLastSync(
-                    unixMs = state.unixMs,
-                    on = state.on,
-                    sender = state.sender,
-                    viaLan = lan.ui.value.connected,
-                )
+                val previous = currentOrigin
+                previous?.lanJob?.cancel()
+                if (previous?.cloudStarted?.get() != true) {
+                    previous?.cloudJob?.cancel()
+                }
+                val origin = Origin(++originGeneration)
+                currentOrigin = origin
+                origin.lanJob = scope.launch {
+                    val acked = try {
+                        if (nearbyGranted.get()) lan.deliverState(state) else false
+                    } catch (cancelled: CancellationException) {
+                        throw cancelled
+                    }
+                    if (!isActive || origin.generation != originGeneration) {
+                        return@launch
+                    }
+                    if (acked) {
+                        pair.persistLastSync(
+                            unixMs = state.unixMs,
+                            on = state.on,
+                            sender = state.sender,
+                            viaLan = true,
+                        )
+                        return@launch
+                    }
+                    origin.cloudStarted.set(true)
+                    origin.cloudJob = ioScope.launch {
+                        postEnvelope(state)
+                        if (origin.generation == originGeneration) {
+                            pair.persistLastSync(
+                                unixMs = state.unixMs,
+                                on = state.on,
+                                sender = state.sender,
+                                viaLan = false,
+                            )
+                        }
+                    }
+                }
             }
         }
         gate.onApplyRemote = { on ->

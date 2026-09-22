@@ -3,6 +3,7 @@ package com.dndsync.android.sync
 import com.dndsync.android.lan.LanUiState
 import com.dndsync.proto.v1.DndState
 import com.dndsync.proto.v1.PairControl
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,6 +17,9 @@ class InMemorySyncLan : SyncLan {
     val unpairs = mutableListOf<PairControl>()
     var started = false
     var lastPairId = ""
+    var ack = false
+    var hangDelivery = false
+    private var hangGate: CompletableDeferred<Unit>? = null
 
     override fun setPairId(pairId: String) {
         lastPairId = pairId
@@ -29,11 +33,22 @@ class InMemorySyncLan : SyncLan {
         started = false
     }
 
-    override fun send(state: DndState) {
+    override suspend fun deliverState(state: DndState): Boolean {
         sent.add(state)
+        if (hangDelivery) {
+            val gate = CompletableDeferred<Unit>()
+            hangGate = gate
+            gate.await()
+        }
+        return ack
     }
 
-    override fun sendUnpairNow(control: PairControl) {
+    fun releaseDelivery() {
+        hangGate?.complete(Unit)
+        hangDelivery = false
+    }
+
+    override suspend fun deliverUnpair(control: PairControl) {
         unpairs.add(control)
     }
 }

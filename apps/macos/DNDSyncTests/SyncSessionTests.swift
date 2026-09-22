@@ -3,7 +3,7 @@ import XCTest
 
 @MainActor
 final class SyncSessionTests: XCTestCase {
-    func testLocalChangeWhileJoinedSendsLanAndCloud() async {
+    func testLocalChangeWhileJoinedSendsCloudOnly() async {
         let lan = InMemorySyncLan()
         let cloud = InMemorySyncCloud()
         let pair = FakeSyncPairing()
@@ -14,24 +14,24 @@ final class SyncSessionTests: XCTestCase {
         session.onLocalFocusChange(on: true)
         try? await Task.sleep(nanoseconds: 20_000_000)
 
-        XCTAssertEqual(lan.sent.count, 1)
-        XCTAssertEqual(lan.sent[0].on, true)
-        XCTAssertEqual(lan.sent[0].sender, LanConstants.senderMac)
+        XCTAssertTrue(lan.sent.isEmpty)
         XCTAssertEqual(cloud.posts.count, 1)
         XCTAssertEqual(pair.lastSync?.on, true)
         XCTAssertEqual(pair.lastSync?.viaLan, false)
         _ = now
+        _ = session
     }
 
-    func testRemoteApplyIsEchoSuppressed() {
+    func testRemoteApplyIsEchoSuppressed() async {
         let lan = InMemorySyncLan()
+        let cloud = InMemorySyncCloud()
         let pair = FakeSyncPairing()
         pair.joined = true
         var now: Int64 = 5_000
         var applied: [Bool] = []
         let session = SyncSession(
             lan: lan,
-            cloud: InMemorySyncCloud(),
+            cloud: cloud,
             pair: pair,
             nowMs: { now }
         )
@@ -40,27 +40,29 @@ final class SyncSessionTests: XCTestCase {
         var remote = DndStateFrames.make(on: true, unixMs: 5_000, sender: LanConstants.senderAndroid)
         session.onInboundState(remote, viaLan: true)
         XCTAssertEqual(applied, [true])
-        XCTAssertTrue(lan.sent.isEmpty)
+        XCTAssertTrue(cloud.posts.isEmpty)
 
         now = 5_500
         session.onLocalFocusChange(on: true)
-        XCTAssertTrue(lan.sent.isEmpty)
+        XCTAssertTrue(cloud.posts.isEmpty)
 
         now = 6_500
         session.onLocalFocusChange(on: false)
-        XCTAssertEqual(lan.sent.count, 1)
-        XCTAssertEqual(lan.sent[0].on, false)
+        try? await Task.sleep(nanoseconds: 20_000_000)
+        XCTAssertEqual(cloud.posts.count, 1)
+        XCTAssertEqual(pair.lastSync?.on, false)
+        XCTAssertEqual(pair.lastSync?.viaLan, false)
         _ = remote
     }
 
-    func testLateFocusObserverAfterRemoteDoesNotPersistMacOrigin() {
-        let lan = InMemorySyncLan()
+    func testLateFocusObserverAfterRemoteDoesNotPersistMacOrigin() async {
+        let cloud = InMemorySyncCloud()
         let pair = FakeSyncPairing()
         pair.joined = true
         var now: Int64 = 5_000
         let session = SyncSession(
-            lan: lan,
-            cloud: InMemorySyncCloud(),
+            lan: InMemorySyncLan(),
+            cloud: cloud,
             pair: pair,
             nowMs: { now }
         )
@@ -70,22 +72,22 @@ final class SyncSessionTests: XCTestCase {
             viaLan: true
         )
         XCTAssertEqual(pair.lastSync?.sender, LanConstants.senderAndroid)
-        XCTAssertTrue(lan.sent.isEmpty)
+        XCTAssertTrue(cloud.posts.isEmpty)
 
         // Shortcuts often finish after the 1s echo window. The Focus observer
         // then reports the same on/off the phone just sent — that must not
         // become a second "by this Mac" activity row.
         now = 8_000
         session.onLocalFocusChange(on: true)
-        XCTAssertTrue(lan.sent.isEmpty)
+        XCTAssertTrue(cloud.posts.isEmpty)
         XCTAssertEqual(pair.lastSync?.sender, LanConstants.senderAndroid)
         XCTAssertEqual(pair.lastSync?.on, true)
 
         session.onLocalFocusChange(on: false)
-        XCTAssertEqual(lan.sent.count, 1)
-        XCTAssertEqual(lan.sent[0].on, false)
-        XCTAssertEqual(lan.sent[0].sender, LanConstants.senderMac)
+        try? await Task.sleep(nanoseconds: 20_000_000)
+        XCTAssertEqual(cloud.posts.count, 1)
         XCTAssertEqual(pair.lastSync?.sender, LanConstants.senderMac)
+        XCTAssertEqual(pair.lastSync?.viaLan, false)
     }
 
     func testOlderUnixMsDropped() {
@@ -205,19 +207,17 @@ final class SyncSessionTests: XCTestCase {
         XCTAssertFalse(pair.joined)
     }
 
-    func testLanDisconnectWhileJoinedChecksPair() async {
+    func testLanDisconnectDoesNotPollDevices() async {
         let lan = InMemorySyncLan()
         let pair = FakeSyncPairing()
         pair.joined = true
         let session = SyncSession(lan: lan, cloud: InMemorySyncCloud(), pair: pair)
 
-        lan.onUiState?(LanUiSnapshot(advertising: true, browsing: true, connected: true, lastError: nil))
+        lan.onUiState?(LanUiSnapshot(advertising: true, browsing: false, connected: true, lastError: nil))
+        lan.onUiState?(LanUiSnapshot(advertising: true, browsing: false, connected: false, lastError: "disconnected"))
         try? await Task.sleep(nanoseconds: 20_000_000)
 
-        lan.onUiState?(LanUiSnapshot(advertising: true, browsing: true, connected: false, lastError: "disconnected"))
-        try? await Task.sleep(nanoseconds: 20_000_000)
-
-        XCTAssertGreaterThanOrEqual(pair.refreshCalls, 1)
+        XCTAssertEqual(pair.refreshCalls, 0)
         _ = session
     }
 }

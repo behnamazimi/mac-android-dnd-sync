@@ -11,6 +11,8 @@ final class ApnsPushReceiver {
     var onReceive: (([String: Any]) -> Void)?
     var onEnvelope: ((Dndsync_V1_CloudEnvelope) -> Void)?
     var onEnvelopeError: ((String) -> Void)?
+    /// Silent join poke. No Focus bit. The Mac asks for the phone's key once.
+    var onJoinedWake: (() -> Void)?
 
     private init() {}
 
@@ -35,6 +37,10 @@ final class ApnsPushReceiver {
             onEnvelope?(envelope)
             return
         }
+        if isJoinedWake(userInfo["joined"]) {
+            onJoinedWake?()
+            return
+        }
         guard let command = userInfo["command"] as? String else {
             return
         }
@@ -44,5 +50,15 @@ final class ApnsPushReceiver {
         default:
             break
         }
+    }
+
+    private func isJoinedWake(_ value: Any?) -> Bool {
+        if let flag = value as? Bool {
+            return flag
+        }
+        if let number = value as? NSNumber {
+            return number.boolValue
+        }
+        return false
     }
 }

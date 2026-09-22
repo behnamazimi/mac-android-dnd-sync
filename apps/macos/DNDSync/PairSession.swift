@@ -12,10 +12,7 @@ final class PairSession {
     private static let pairIdByteCount = 8
     private static let secretByteCount = 32
     private static let platform = "apns"
-    private static let pollFastSeconds: Double = 2
-    private static let pollSlowSeconds: Double = 10
-    private static let pollSlowAfterSeconds: TimeInterval = 300
-    private static let pairedWatchSeconds: Double = 3
+    private static let pollSeconds: Double = 15
     private static let qrScale: CGFloat = 10
     private static let qrCorrection = "M"
 
@@ -59,8 +56,6 @@ final class PairSession {
     private var peerPublicKey: Data?
     private var aesKey: SymmetricKey?
     private var pollTask: Task<Void, Never>?
-    private var pairedWatchTask: Task<Void, Never>?
-    private var pollStartedAt: Date?
     private var createPairInFlight = false
 
     init(
@@ -297,7 +292,6 @@ final class PairSession {
         lastSyncViaLan = false
         recentActivity = []
         stopPeerPoll()
-        stopPairedWatch()
         onPairIdChange?(pairId)
         publish()
         Task {
@@ -330,32 +324,12 @@ final class PairSession {
         }
     }
 
-    func startPairedWatch() {
-        if pairedWatchTask != nil { return }
-        pairedWatchTask = Task { [weak self] in
-            while let self, !Task.isCancelled, self.joined {
-                try? await Task.sleep(for: .seconds(Self.pairedWatchSeconds))
-                guard !Task.isCancelled else { return }
-                await self.refreshPairOrUnpair()
-            }
-            self?.pairedWatchTask = nil
-        }
-    }
-
-    func stopPairedWatch() {
-        pairedWatchTask?.cancel()
-        pairedWatchTask = nil
-    }
-
     func startPeerPoll(shouldContinue: @escaping () -> Bool) {
         if pollTask != nil { return }
-        pollStartedAt = .now
         pollTask = Task { [weak self] in
             while let self, !Task.isCancelled, shouldContinue(), self.aesKey == nil {
                 await self.fetchPeer()
-                let elapsed = Date.now.timeIntervalSince(self.pollStartedAt ?? .now)
-                let delay = elapsed > Self.pollSlowAfterSeconds ? Self.pollSlowSeconds : Self.pollFastSeconds
-                try? await Task.sleep(for: .seconds(delay))
+                try? await Task.sleep(for: .seconds(Self.pollSeconds))
             }
             self?.pollTask = nil
         }

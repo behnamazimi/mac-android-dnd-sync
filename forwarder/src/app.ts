@@ -8,8 +8,9 @@ import {
   safeEqualHex,
   sha256Hex,
 } from "./auth.js";
-import { sendSilentApns } from "./apns.js";
+import { sendJoinedApns, sendSilentApns } from "./apns.js";
 import { sendDataFcm } from "./fcm.js";
+import { wakeMacOnJoin } from "./join_wake.js";
 import {
   createPair,
   deletePair,
@@ -91,6 +92,14 @@ app.post("/v1/pairs/:pairId/join", async (c) => {
     token: body.token,
     e2ePublicKey: body.e2e_public_key,
   });
+  if (body.sender === "android") {
+    try {
+      await wakeMacOnJoin(pairId, sendJoinedApns);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "join wake failed";
+      console.error("join wake failed", message);
+    }
+  }
   return c.body(null, 204);
 });
 

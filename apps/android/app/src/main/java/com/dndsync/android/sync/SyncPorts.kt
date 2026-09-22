@@ -13,8 +13,10 @@ interface SyncLan {
     fun setPairId(pairId: String)
     fun start()
     fun stop()
-    fun send(state: DndState)
-    fun sendUnpairNow(control: PairControl)
+    /** True when the Mac ACKs this state's `unix_ms` within the attempt budget. */
+    suspend fun deliverState(state: DndState): Boolean
+    /** Best-effort dial. The caller still posts the cloud unpair. */
+    suspend fun deliverUnpair(control: PairControl)
 }
 
 interface SyncCloud {

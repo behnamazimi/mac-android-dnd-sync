@@ -9,7 +9,7 @@ import org.junit.Test
 
 class SyncSessionTests {
     @Test
-    fun localChangeWhileJoinedSendsLanAndCloud() {
+    fun localChangeWithoutNearbySendsCloudOnly() {
         val lan = InMemorySyncLan()
         val cloud = InMemorySyncCloud()
         val pair = FakeSyncPairing().apply { joined = true }
@@ -18,57 +18,112 @@ class SyncSessionTests {
 
         session.onLocalFocusChange(true)
 
-        assertEquals(1, lan.sent.size)
-        assertTrue(lan.sent[0].on)
-        assertEquals(Wire.SENDER_ANDROID, lan.sent[0].sender)
+        assertTrue(lan.sent.isEmpty())
         assertEquals(1, cloud.posts.size)
         assertEquals(true, pair.lastSync?.on)
+        assertEquals(false, pair.lastSync?.viaLan)
+    }
+
+    @Test
+    fun nearbyAckSkipsCloud() {
+        val lan = InMemorySyncLan().apply { ack = true }
+        val cloud = InMemorySyncCloud()
+        val pair = FakeSyncPairing().apply { joined = true }
+        val session = session(lan, cloud, pair) { 1_000L }
+        session.setNearbyGranted(true)
+
+        session.onLocalFocusChange(true)
+
+        assertEquals(1, lan.sent.size)
+        assertTrue(lan.sent[0].on)
+        assertTrue(cloud.posts.isEmpty())
+        assertEquals(true, pair.lastSync?.viaLan)
+    }
+
+    @Test
+    fun nearbyWithoutAckSendsCloud() {
+        val lan = InMemorySyncLan().apply { ack = false }
+        val cloud = InMemorySyncCloud()
+        val pair = FakeSyncPairing().apply { joined = true }
+        val session = session(lan, cloud, pair) { 1_000L }
+        session.setNearbyGranted(true)
+
+        session.onLocalFocusChange(true)
+
+        assertEquals(1, lan.sent.size)
+        assertEquals(1, cloud.posts.size)
+        assertEquals(false, pair.lastSync?.viaLan)
+    }
+
+    @Test
+    fun newerFlipCancelsPendingCloudFallback() {
+        val lan = InMemorySyncLan().apply {
+            hangDelivery = true
+            ack = true
+        }
+        val cloud = InMemorySyncCloud()
+        val pair = FakeSyncPairing().apply { joined = true }
+        var now = 1_000L
+        val session = session(lan, cloud, pair) { now }
+        session.setNearbyGranted(true)
+
+        session.onLocalFocusChange(true)
+        assertEquals(1, lan.sent.size)
+        assertTrue(cloud.posts.isEmpty())
+
+        lan.hangDelivery = false
+        now = 2_000L
+        session.onLocalFocusChange(false)
+
+        assertEquals(2, lan.sent.size)
+        assertTrue(cloud.posts.isEmpty())
+        assertEquals(false, pair.lastSync?.on)
+        assertEquals(true, pair.lastSync?.viaLan)
     }
 
     @Test
     fun remoteApplyIsEchoSuppressed() {
-        val lan = InMemorySyncLan()
+        val cloud = InMemorySyncCloud()
         val pair = FakeSyncPairing().apply { joined = true }
         var now = 5_000L
         val applied = mutableListOf<Boolean>()
-        val session = session(lan, InMemorySyncCloud(), pair) { now }
+        val session = session(InMemorySyncLan(), cloud, pair) { now }
         session.onApplyRemote = { applied.add(it) }
 
         session.onInboundState(dndState(on = true, unixMs = 5_000), viaLan = true)
         assertEquals(listOf(true), applied)
-        assertTrue(lan.sent.isEmpty())
+        assertTrue(cloud.posts.isEmpty())
 
         now = 5_500
         session.onLocalFocusChange(true)
-        assertTrue(lan.sent.isEmpty())
+        assertTrue(cloud.posts.isEmpty())
 
         now = 6_500
         session.onLocalFocusChange(false)
-        assertEquals(1, lan.sent.size)
-        assertFalse(lan.sent[0].on)
+        assertEquals(1, cloud.posts.size)
+        assertEquals(false, pair.lastSync?.viaLan)
     }
 
     @Test
     fun lateObserverAfterRemoteDoesNotOriginateSameOn() {
-        val lan = InMemorySyncLan()
+        val cloud = InMemorySyncCloud()
         val pair = FakeSyncPairing().apply { joined = true }
         var now = 5_000L
-        val session = session(lan, InMemorySyncCloud(), pair) { now }
+        val session = session(InMemorySyncLan(), cloud, pair) { now }
 
         session.onInboundState(dndState(on = true, unixMs = 5_000, sender = Wire.SENDER_MAC), viaLan = true)
         assertEquals(Wire.SENDER_MAC, pair.lastSync?.sender)
-        assertTrue(lan.sent.isEmpty())
+        assertTrue(cloud.posts.isEmpty())
 
         now = 8_000
         session.onLocalFocusChange(true)
-        assertTrue(lan.sent.isEmpty())
+        assertTrue(cloud.posts.isEmpty())
         assertEquals(Wire.SENDER_MAC, pair.lastSync?.sender)
 
         session.onLocalFocusChange(false)
-        assertEquals(1, lan.sent.size)
-        assertFalse(lan.sent[0].on)
-        assertEquals(Wire.SENDER_ANDROID, lan.sent[0].sender)
+        assertEquals(1, cloud.posts.size)
         assertEquals(Wire.SENDER_ANDROID, pair.lastSync?.sender)
+        assertEquals(false, pair.lastSync?.viaLan)
     }
 
     @Test
@@ -87,12 +142,12 @@ class SyncSessionTests {
 
     @Test
     fun notJoinedDoesNotOriginate() {
-        val lan = InMemorySyncLan()
+        val cloud = InMemorySyncCloud()
         val pair = FakeSyncPairing().apply { joined = false }
-        val session = session(lan, InMemorySyncCloud(), pair) { 1_000 }
+        val session = session(InMemorySyncLan(), cloud, pair) { 1_000 }
 
         session.onLocalFocusChange(true)
-        assertTrue(lan.sent.isEmpty())
+        assertTrue(cloud.posts.isEmpty())
         assertEquals(null, pair.lastSync)
     }
 
@@ -110,6 +165,7 @@ class SyncSessionTests {
         val lan = InMemorySyncLan()
         val cloud = InMemorySyncCloud()
         val session = session(lan, cloud, FakeSyncPairing().apply { joined = true })
+        session.setNearbyGranted(true)
         session.sendUnpair(
             UnpairContext(
                 pairId = "dndsync-test",
@@ -129,6 +185,7 @@ class SyncSessionTests {
         val lan = InMemorySyncLan()
         val cloud = InMemorySyncCloud()
         val session = session(lan, cloud, FakeSyncPairing())
+        session.setNearbyGranted(true)
         session.sendUnpair(
             UnpairContext(
                 pairId = "dndsync-test",
@@ -197,11 +254,11 @@ class SyncSessionTests {
 
     @Test
     fun inboundCommandGoesThroughGate() {
-        val lan = InMemorySyncLan()
+        val cloud = InMemorySyncCloud()
         val pair = FakeSyncPairing().apply { joined = true }
         var now = 1_000L
         val applied = mutableListOf<Boolean>()
-        val session = session(lan, InMemorySyncCloud(), pair) { now }
+        val session = session(InMemorySyncLan(), cloud, pair) { now }
         session.onApplyRemote = { applied.add(it) }
 
         session.onInboundCommand(true)
@@ -209,7 +266,7 @@ class SyncSessionTests {
 
         now = 1_500
         session.onLocalFocusChange(true)
-        assertTrue(lan.sent.isEmpty())
+        assertTrue(cloud.posts.isEmpty())
     }
 
     private fun session(

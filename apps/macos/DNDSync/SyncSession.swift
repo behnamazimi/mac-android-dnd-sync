@@ -118,13 +118,12 @@ final class SyncSession {
     private func wire() {
         gate.onOriginate = { [weak self] state in
             guard let self, self.pair.joined else { return }
-            self.lan.send(state)
             self.postEnvelope(state)
             self.pair.persistLastSync(
                 unixMs: state.unixMs,
                 on: state.on,
                 sender: state.sender,
-                viaLan: self.lanConnected
+                viaLan: false
             )
         }
         gate.onApplyRemote = { [weak self] on in
@@ -133,7 +132,6 @@ final class SyncSession {
         lan.onUiState = { [weak self] snapshot in
             Task { @MainActor in
                 guard let self else { return }
-                let dropped = self.lanConnected && !snapshot.connected
                 self.lanAdvertising = snapshot.advertising
                 self.lanBrowsing = snapshot.browsing
                 self.lanConnected = snapshot.connected
@@ -143,9 +141,6 @@ final class SyncSession {
                     self.lastLanErrorText = "Last LAN error: —"
                 }
                 self.publish()
-                if dropped, self.pair.joined {
-                    await self.pair.refreshPairOrUnpair()
-                }
             }
         }
         lan.onInbound = { [weak self] state in

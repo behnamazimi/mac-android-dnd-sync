@@ -5,12 +5,13 @@ Guidance for AI coding agents working in this repository.
 ## What this repo is
 
 Mac & Android DND Sync keeps Do Not Disturb / Focus state in sync between a
-macOS menu-bar app and an Android app. Same Wi-Fi uses Bonjour/NSD for a
-direct LAN connection. Off-LAN uses a request/response push forwarder (FCM to
-Android, silent APNs to Mac) backed by a small Firebase Cloud Function. There
-is no cloud relay of state and no persistent Mac socket. The cloud path is a
-wake-and-pull, not a live channel. Firestore stores only pairing secrets and
-push tokens, never an on/off bit.
+macOS menu-bar app and an Android app. On the same Wi-Fi the phone discovers
+the Mac, sends one `DndState`, waits for a `LanAck`, and closes. A Mac flip
+always uses push, including on the same Wi-Fi. Off-LAN uses a request/response
+push forwarder (FCM to Android, silent APNs to Mac) backed by a small Firebase
+Cloud Function. There is no cloud relay of state and no persistent connection
+between the two apps. The cloud path is a wake-and-pull, not a live channel.
+Firestore stores only pairing secrets and push tokens, never an on/off bit.
 
 The product surface is intentionally minimal: users flip the system DND
 control on either device and the other follows. Neither app exposes a third,
@@ -277,10 +278,15 @@ device.
   never shows it). Must see: the Quick Settings DND tile or harness state
   flips; a manual-tile veto still fires the existing failed-off
   notification.
-- **Phase 4 — same-Wi-Fi sync.** Bonjour/NSD finds the peer, one TCP
-  connection carries a length-prefixed `DndState`. Must see: both apps show
-  **connected** (not just advertising); flips in either direction follow
-  within seconds; rapid flips or a vetoed Android off don't ping-pong.
+- **Phase 4 — same-Wi-Fi sync.** The Mac listens and advertises. The phone
+  does not. When Nearby is granted, a phone flip resolves the Mac, opens one
+  TCP connection, sends a length-prefixed `DndState`, and closes after a
+  `LanAck` for that `unix_ms` (about 2 seconds, then cloud). A Mac flip always
+  posts an envelope, including on the same Wi-Fi. Must see: a phone flip
+  follows within seconds without a Cloud Function call when the ACK lands;
+  a Mac flip still arrives by push; rapid flips or a vetoed Android off
+  don't ping-pong. The Nearby chip is the last completed path, not a live
+  socket.
 - **Phase 5 — Mac APNs harness.** A scripted silent push
   (`content-available`, no banner/sound/badge) applies Focus the same way
   loopback does. `make apns TOKEN=… CMD=on|off` needs `APNS_KEY_ID` /
@@ -291,8 +297,11 @@ device.
   deployed forwarder; a flip on one reaches the other in ~10s over cellular
   / off that Wi-Fi. Must see: Firestore has `secretHash` and both device
   tokens, no on/off field; breaking the URL fails closed with a cloud error,
-  no retry storm; putting both devices back on the same Wi-Fi still works
-  and doesn't ping-pong against the cloud path.
+  no retry storm; a same-Wi-Fi phone flip does not also call the function
+  when the LAN ACK lands, and coming back to that Wi-Fi doesn't ping-pong
+  against the cloud path. `POST /join` sends one silent APNs `joined` marker
+  so the Mac fetches the phone's key once; join still returns 204 if that
+  push fails.
 - **Phase 6.B — pairing and E2E.** Real QR/paste pairing replaces the
   hardcoded 6.A pair. Must see: ciphertext on the wire, not plaintext
   `DndState`; **Re-pair** invalidates the old bearer token (401).

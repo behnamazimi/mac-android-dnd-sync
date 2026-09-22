@@ -39,7 +39,12 @@ and one Android phone. The system DND/Focus control is the only switch.
   FCM/APNs. Firestore never stores an on/off bit.
 - **Echo suppression** — after applying a remote state, ignore the local
   Focus notification we just caused so the pair does not ping-pong.
-- **Wake-and-pull** — off-LAN path. A silent push wakes the Mac; there is no
-  live Mac socket and no cloud relay of state.
+- **Wake-and-pull** — off-LAN path, and every Mac-originated flip. A silent
+  push wakes the peer. There is no held LAN socket and no cloud relay of
+  state.
+- **LanAck** — one-shot receipt on the phone-to-Mac TCP connection. Version
+  3, carries the `unix_ms` of the `DndState` the Mac accepted. A matching
+  ACK skips the cloud post. The phone then closes the socket.
 - **Diagnostics** — debug-only harness log. Product screens do not have On/Off
-  test buttons.
+  test buttons. The product Nearby chip follows the last completed sync, not
+  the live socket.

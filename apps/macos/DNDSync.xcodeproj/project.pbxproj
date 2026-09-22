@@ -45,6 +45,7 @@
 		AA00000000000000000000F6 /* ProductChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000F5 /* ProductChrome.swift */; };
 		AA00000000000000000000F8 /* NetworkPathMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000F7 /* NetworkPathMonitor.swift */; };
 		AA0000000000000000000114 /* dndsync_v1_pair_control.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000113 /* dndsync_v1_pair_control.pb.swift */; };
+		AA0000000000000000000116 /* dndsync_v1_lan_ack.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000115 /* dndsync_v1_lan_ack.pb.swift */; };
 		AA0000000000000000000120 /* FailedApplyNotifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000121 /* FailedApplyNotifier.swift */; };
 		AA0000000000000000000131 /* FocusApply.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000130 /* FocusApply.swift */; };
 		AA0000000000000000000137 /* PairPorts.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000136 /* PairPorts.swift */; };
@@ -112,6 +113,7 @@
 		AA00000000000000000000FB /* ProductRoutingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductRoutingTests.swift; sourceTree = "<group>"; };
 		AA00000000000000000000FE /* FocusStatusObserverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusStatusObserverTests.swift; sourceTree = "<group>"; };
 		AA0000000000000000000113 /* dndsync_v1_pair_control.pb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = dndsync_v1_pair_control.pb.swift; sourceTree = "<group>"; };
+		AA0000000000000000000115 /* dndsync_v1_lan_ack.pb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = dndsync_v1_lan_ack.pb.swift; sourceTree = "<group>"; };
 		AA0000000000000000000121 /* FailedApplyNotifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FailedApplyNotifier.swift; sourceTree = "<group>"; };
 		AA0000000000000000000130 /* FocusApply.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusApply.swift; sourceTree = "<group>"; };
 		AA0000000000000000000136 /* PairPorts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PairPorts.swift; sourceTree = "<group>"; };
@@ -214,6 +216,7 @@
 				AA00000000000000000000B6 /* dndsync_v1_ping.pb.swift */,
 				AA00000000000000000000BA /* dndsync_v1_cloud_envelope.pb.swift */,
 				AA0000000000000000000113 /* dndsync_v1_pair_control.pb.swift */,
+				AA0000000000000000000115 /* dndsync_v1_lan_ack.pb.swift */,
 			);
 			path = Generated;
 			sourceTree = "<group>";
@@ -407,6 +410,7 @@
 				AA00000000000000000000C5 /* dndsync_v1_ping.pb.swift in Sources */,
 				AA00000000000000000000CD /* dndsync_v1_cloud_envelope.pb.swift in Sources */,
 				AA0000000000000000000114 /* dndsync_v1_pair_control.pb.swift in Sources */,
+				AA0000000000000000000116 /* dndsync_v1_lan_ack.pb.swift in Sources */,
 				AA000000000000000000000C /* CloudEnvelopeCodec.swift in Sources */,
 				AA000000000000000000000D /* ForwarderSecrets.swift in Sources */,
 				AA000000000000000000000E /* ForwarderSecrets.local.swift in Sources */,

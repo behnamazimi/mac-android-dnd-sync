@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package dndsync.v1;
+
+option java_package = "com.dndsync.proto.v1";
+option java_multiple_files = true;
+
+// One-shot LAN receipt. version is 3 so a payload cannot also decode as
+// DndState (version 1) or unpair PairControl (version 2).
+message LanAck {
+  uint32 version = 1;
+  int64 unix_ms = 2;
+}

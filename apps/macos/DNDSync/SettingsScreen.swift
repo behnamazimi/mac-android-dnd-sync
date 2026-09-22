@@ -23,7 +23,7 @@ struct SettingsScreen: View {
                 Section(ProductCopy.pairing) {
                     if model.paired {
                         LabeledContent {
-                            Text(LastSyncPresentation.pathLabel(viaLan: model.lanConnected))
+                            Text(LastSyncPresentation.pathLabel(viaLan: model.lastSyncViaLan))
                                 .foregroundStyle(.secondary)
                         } label: {
                             Label(LastSyncPresentation.peerLabel(model.peerDeviceName), systemImage: "iphone")
