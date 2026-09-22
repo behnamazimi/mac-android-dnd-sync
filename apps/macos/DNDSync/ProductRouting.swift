@@ -1,7 +1,8 @@
 import Foundation
 
 enum ProductCopy {
-    static let appName = "DND Sync"
+    static let appName = "Focus Sync"
+    static let androidAppName = "Do Not Disturb Sync"
     static let offlineTitle = "No network"
     static let offlineBody = "Connect to Wi-Fi or cellular to continue."
     static let diagnostics = "Diagnostics"
@@ -15,12 +16,12 @@ enum ProductCopy {
     static let grantAccessTitle = "Two quick permissions"
     static let grantAccessBody = "macOS will ask twice. Here's why."
     static let automationRowTitle = "Run Shortcuts"
-    static let automationRowSubtitle = "Lets DND Sync turn Focus on or off when your phone does."
+    static let automationRowSubtitle = "Lets \(appName) turn Focus on or off when your phone does."
     static let notificationsRowTitle = "Send Notifications"
     static let notificationsRowSubtitle = "We'll ping you if a change didn't go through."
     static let continueLabel = "Continue"
     static let automationDenied =
-        "Shortcuts access is off. In System Settings → Privacy & Security → Automation, allow DND Sync to control Shortcuts."
+        "Shortcuts access is off. In System Settings → Privacy & Security → Automation, allow \(appName) to control Shortcuts."
     static let openAutomation = "Open Automation settings"
 
     static let shortcutsTitle = "Add two shortcuts"
@@ -28,10 +29,10 @@ enum ProductCopy {
         "Add both shortcuts so this Mac can turn Focus on and off. Adding them won't change Focus."
     static let addOn = "Add On shortcut"
     static let checkAgain = "Check again"
-    static let onMissing = "\"DND Sync On\" isn't in Shortcuts yet. Click Add, then come back here."
+    static let onMissing = "\"\(ShortcutNames.on)\" isn't in Shortcuts yet. Click Add, then come back here."
 
     static let addOff = "Add Off shortcut"
-    static let offMissing = "\"DND Sync Off\" isn't in Shortcuts yet. Click Add, then come back here."
+    static let offMissing = "\"\(ShortcutNames.off)\" isn't in Shortcuts yet. Click Add, then come back here."
 
     static let shortcutRowOn = "On"
     static let shortcutRowOff = "Off"
@@ -39,12 +40,12 @@ enum ProductCopy {
 
     static let loginTitle = "Open at login"
     static let loginBody =
-        "Keep DND Sync running so this Mac can follow your phone, even when you're not on the same Wi-Fi. If you quit the app, Focus won't update."
+        "Keep \(appName) running so this Mac can follow your phone, even when you're not on the same Wi-Fi. If you quit the app, Focus won't update."
     static let openAtLogin = "Open at login"
     static let skipForNow = "Skip for now"
 
     static let qrBody =
-        "Open DND Sync on your phone and point the camera at this code. Keep this window open until you're connected."
+        "Open \(androidAppName) on your phone and point the camera at this code. Keep this window open until you're connected."
     static let waitingApns = "Getting ready…"
     static let createPairFailed = "Couldn't start pairing. Check the internet and try again."
     static let tryAgain = "Try again"
@@ -97,7 +98,7 @@ enum ProductCopy {
     static let pairingExpired = "Pairing expired. Connect again from Settings."
     static let shortcutsMissing = "Add the On and Off shortcuts so this Mac can follow your phone."
     static let applyDropped = "Couldn't update Focus. Finish setup, then try again."
-    static let applyDroppedNotificationTitle = "DND Sync couldn't update Focus"
+    static let applyDroppedNotificationTitle = "\(appName) couldn't update Focus"
 }
 
 /// Not on the App Store yet — both apps point at the same GitHub repo.

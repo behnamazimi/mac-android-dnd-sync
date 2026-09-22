@@ -165,8 +165,8 @@ Diagnostics live inside the app window (gear icon on Home, or **⌘,**).
 
 The On and Off shortcuts live at:
 
-- `apps/macos/Shortcuts/DND Sync On.shortcut`
-- `apps/macos/Shortcuts/DND Sync Off.shortcut`
+- `apps/macos/Shortcuts/Focus Sync On.shortcut`
+- `apps/macos/Shortcuts/Focus Sync Off.shortcut`
 
 Each is a single **Set Focus** action for system **Do Not Disturb**. To
 recreate them, build matching actions in Shortcuts.app with those exact
@@ -188,8 +188,8 @@ secrets, E2E keys, FCM tokens, or APNs tokens. Copy pairing code (the QR
 step's own escape hatch) is the one place a secret is ever surfaced, and
 it's a secret the moment you copy it.
 
-Open `apps/android` (not the repository root). The launcher label is **DND
-Sync**. The wall order is **Welcome → pair with the Mac's QR → Do Not
+Open `apps/android` (not the repository root). The launcher label is **Do
+Not Disturb Sync**. The wall order is **Welcome → pair with the Mac's QR → Do Not
 Disturb access → notifications → status**. You cannot reach a grant screen
 until you've joined a pair, and resume returns to whichever grant is still
 missing.
@@ -199,7 +199,7 @@ missing.
    can't read the QR. Joining needs the internet even on the same Wi-Fi.
    Neither app is on a store yet, so this screen and Settings → About also
    offer **Download the Mac app**, linking to the GitHub Release page.
-2. Tap **Open Do Not Disturb access** and enable **DND Sync** in the system
+2. Tap **Open Do Not Disturb access** and enable **Do Not Disturb Sync** in the system
    list, then return.
 3. Tap **Allow notifications** (or **Open settings** if you denied
    permanently).

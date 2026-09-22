@@ -2,10 +2,10 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset=".github/assets/dnd-sync-logo-dark.svg">
-  <img alt="DND Sync" src=".github/assets/dnd-sync-logo.svg" width="96">
+  <img alt="Focus Sync and Do Not Disturb Sync" src=".github/assets/dnd-sync-logo.svg" width="96">
 </picture>
 
-# DND Sync
+# Focus Sync and Do Not Disturb Sync
 
 **Keep Do Not Disturb in lockstep between your Mac and Android phone**
 
@@ -21,7 +21,7 @@ Download the `.dmg` and `.apk` from the
 
 <!-- prettier-ignore -->
 > [!NOTE]
-> Neither the App Store nor Play Store lists DND Sync yet. The Mac app is
+> Neither the App Store nor Play Store lists these apps yet. The Mac app is
 > notarized. Sideload the Android app on Android 15 (allow installs from
 > this source when the system asks).
 
@@ -31,23 +31,23 @@ Pair both devices, then flip Focus. Status shows **Paired** when it worked.
 
 ### Mac
 
-The Mac app is a menu-bar extra with no Dock icon.
+The Mac app is a menu-bar extra named **Focus Sync**, with no Dock icon.
 
-1. Open the `.dmg`, drag **DND Sync** onto **Applications**, and launch it.
+1. Open the `.dmg`, drag **Focus Sync** onto **Applications**, and launch it.
 2. Click the icon and finish the wizard: allow Shortcuts and notifications,
-   add **DND Sync On** and **DND Sync Off**, then optionally **Open at
+   add **Focus Sync On** and **Focus Sync Off**, then optionally **Open at
    login**.
 3. Leave the window open on the QR code.
 
 ### Android
 
-The phone app is named **DND Sync**.
+The phone app is named **Do Not Disturb Sync**.
 
-1. Sideload the `.apk` and open **DND Sync**.
+1. Sideload the `.apk` and open **Do Not Disturb Sync**.
 2. Scan the Mac's QR code, or paste the pairing code if the camera cannot
    read it. Joining needs the internet, even on the same Wi-Fi.
-3. Enable **DND Sync** in the system Do Not Disturb access list, then allow
-   notifications.
+3. Enable **Do Not Disturb Sync** in the system Do Not Disturb access list,
+   then allow notifications.
 
 Flip Focus on the Mac or Do Not Disturb on the phone. The other device
 follows.
@@ -76,8 +76,8 @@ access.
 - **Android 15:** the phone app targets API 35.
 - **Shortcuts on the Mac:** the bundled On and Off shortcuts are how this
   Mac applies Focus.
-- **Do Not Disturb access on the phone:** enable DND Sync in the system
-  list.
+- **Do Not Disturb access on the phone:** enable Do Not Disturb Sync in the
+  system list.
 - **A running Mac:** a fully quit Mac cannot apply Focus from the phone.
   Open at login is skippable in the wizard and the right choice if you
   sync off-LAN.

@@ -229,7 +229,7 @@ final class ProductChrome: NSObject, NSWindowDelegate {
         orderFrontAppWindow(window)
     }
 
-    /// Onboarding steps show "Set up DND Sync" in the title bar. Welcome
+    /// Onboarding steps show "Set up \(ProductCopy.appName)" in the title bar. Welcome
     /// and the everyday Home screen just show the app name.
     private static func windowTitle(for destination: MacDestination) -> String {
         switch destination {

@@ -6,7 +6,7 @@ package com.dndsync.android.ui.copy
  * justify a move to `strings.xml`, and this keeps copy easy to review in one place).
  */
 object ProductCopy {
-    const val APP_NAME = "DND Sync"
+    const val APP_NAME = "Do Not Disturb Sync"
     const val BACK = "Back"
     const val CLOSE = "Close"
     const val CANCEL = "Cancel"
@@ -35,7 +35,7 @@ object ProductCopy {
     const val ENTER_CODE_PLACEHOLDER = "Code from your Mac"
     const val PASTE_FROM_CLIPBOARD = "Paste from clipboard"
     const val JOIN = "Connect"
-    const val BAD_PAYLOAD = "That isn't a DND Sync code."
+    const val BAD_PAYLOAD = "That isn't a pairing code."
     const val JOIN_FAILED = "Couldn't connect. Check the internet and try again."
     const val DOWNLOAD_MAC_APP = "Download the Mac app"
 
@@ -51,11 +51,11 @@ object ProductCopy {
     const val FOCUS_ACCESS_HEADER = "Do Not Disturb access"
     const val FOCUS_ACCESS_TITLE = "Keep Do Not Disturb in sync"
     const val FOCUS_ACCESS_BODY =
-        "DND Sync needs to see and change Do Not Disturb on this phone."
+        "$APP_NAME needs to see and change Do Not Disturb on this phone."
     const val FOCUS_ACCESS_PRIMARY = "Open access settings"
     const val FOCUS_ACCESS_STILL_DENIED =
-        "Still off. Turn on DND Sync in the list, then come back."
-    const val FOCUS_ACCESS_HINT = "The list opens on DND Sync"
+        "Still off. Turn on $APP_NAME in the list, then come back."
+    const val FOCUS_ACCESS_HINT = "The list opens on $APP_NAME"
 
     // Notifications
     const val NOTIFICATIONS_HEADER = "Notifications"

@@ -1,8 +1,8 @@
 import Foundation
 
 enum ShortcutNames {
-    static let on = "DND Sync On"
-    static let off = "DND Sync Off"
+    static let on = "Focus Sync On"
+    static let off = "Focus Sync Off"
 }
 
 enum ShortcutRunError: LocalizedError {
