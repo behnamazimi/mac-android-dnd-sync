@@ -9,6 +9,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.core.content.ContextCompat
 import com.dndsync.android.dnd.DndApply
+import com.dndsync.android.net.NetworkPathMonitor
 import com.dndsync.android.pair.PairSession
 import com.dndsync.android.ui.navigation.AndroidRouting
 import com.dndsync.android.ui.navigation.DndSyncNavHost
@@ -23,6 +24,8 @@ class MainActivity : ComponentActivity() {
     @Inject lateinit var pairSession: PairSession
     @Inject lateinit var dndApply: DndApply
     @Inject lateinit var onboardingPrefs: OnboardingPrefsStore
+    // Constructed here so the callback is registered before Home; refresh on resume.
+    @Inject lateinit var networkPathMonitor: NetworkPathMonitor
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,5 +49,10 @@ class MainActivity : ComponentActivity() {
                 DndSyncNavHost(startDestination = startDestination, pairSession = pairSession)
             }
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        networkPathMonitor.refresh()
     }
 }
