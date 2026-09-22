@@ -194,7 +194,7 @@ async function postOnce(
         authorization: `bearer ${jwt}`,
         "apns-topic": TOPIC,
         "apns-push-type": "alert",
-        "apns-priority": "10",
+        "apns-priority": "5",
         "apns-collapse-id": COLLAPSE_ID,
         "content-type": "application/json",
       });
