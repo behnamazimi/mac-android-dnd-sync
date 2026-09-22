@@ -70,6 +70,14 @@ class AndroidRoutingTest {
         assertEquals(false, AndroidRouting.shouldResetToWelcome(true, Routes.Home))
     }
 
+    @Test
+    fun connectingAndLocalUnpairDoNotReset() {
+        assertEquals(false, AndroidRouting.shouldResetToWelcome(false, Routes.connecting(Origin.Onboarding)))
+        assertEquals(false, AndroidRouting.shouldResetToWelcome(false, Routes.connecting(Origin.Repair)))
+        assertEquals(false, AndroidRouting.shouldResetToWelcome(false, Routes.ConnectingPattern))
+        assertEquals(false, AndroidRouting.shouldResetToWelcome(false, Routes.UnpairConfirm))
+    }
+
     private fun progress(
         hasStoredPair: Boolean = false,
         joined: Boolean = false,

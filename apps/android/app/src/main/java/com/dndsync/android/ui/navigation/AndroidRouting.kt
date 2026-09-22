@@ -49,18 +49,24 @@ object AndroidRouting {
      * Start destination is computed once. A peer unpair (or a 401 expiry)
      * clears the pair while NavHost is already on Home/Settings; send the
      * user back to Welcome instead of leaving a stale status screen.
+     *
+     * Leave the pairing and local-unpair screens alone: Connecting is
+     * reached after a scan *before* the pair is persisted, and Unpair
+     * Confirm navigates itself once [PairSession.unpair] finishes. Resetting
+     * those races the handshake (Mac pairs, phone shows Scan again) or
+     * double-pops the graph and crashes.
      */
     fun shouldResetToWelcome(hasStoredPair: Boolean, route: String?): Boolean {
         if (hasStoredPair) {
             return false
         }
         val route = route ?: return false
-        if (route == Routes.Welcome) {
-            return false
-        }
-        if (route.startsWith("connect_to_mac/")) {
-            return false
-        }
-        return true
+        return !isOwnedWhileUnpaired(route)
     }
+
+    private fun isOwnedWhileUnpaired(route: String): Boolean =
+        route == Routes.Welcome ||
+            route == Routes.UnpairConfirm ||
+            route.startsWith("connect_to_mac/") ||
+            route.startsWith("connecting/")
 }

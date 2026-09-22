@@ -5,6 +5,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -46,7 +47,7 @@ fun DndSyncNavHost(
     LaunchedEffect(cloud, current?.destination?.route) {
         val route = current?.destination?.route
         if (AndroidRouting.shouldResetToWelcome(pairSession.hasStoredPair, route)) {
-            navController.navigate(Routes.Welcome) { popUpTo(0) { inclusive = true } }
+            navController.resetToWelcome()
         }
     }
     NavHost(navController = navController, startDestination = startDestination, modifier = modifier) {
@@ -114,9 +115,7 @@ fun DndSyncNavHost(
         composable(Routes.UnpairConfirm) {
             UnpairConfirmScreen(
                 onBack = { navController.popBackStack() },
-                onUnpaired = {
-                    navController.navigate(Routes.Welcome) { popUpTo(0) { inclusive = true } }
-                },
+                onUnpaired = { navController.resetToWelcome() },
             )
         }
 
@@ -145,3 +144,10 @@ fun DndSyncNavHost(
 
 private fun originArg(entry: androidx.navigation.NavBackStackEntry): Origin =
     Origin.valueOf(entry.arguments?.getString(Routes.OriginArg) ?: Origin.Onboarding.name)
+
+private fun NavController.resetToWelcome() {
+    navigate(Routes.Welcome) {
+        popUpTo(graph.id) { inclusive = true }
+        launchSingleTop = true
+    }
+}
