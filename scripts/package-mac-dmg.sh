@@ -5,6 +5,9 @@ set -euo pipefail
 # Applications on the right, Finder window sized to that layout). Uses
 # dmgbuild in a throwaway venv so we do not need Finder AppleScript, which
 # is flaky on GitHub Actions. Never prints secret values.
+#
+# Xcode still exports DNDSync.app. The public image shows Focus Sync.app
+# (same stapled bundle, copied at pack time) on a volume named Focus Sync.
 
 if [[ $# -ne 2 ]]; then
 	printf 'Usage: %s <DNDSync.app> <output.dmg>\n' "$(basename "$0")" >&2
@@ -32,20 +35,25 @@ mkdir -p "$(dirname "$out")"
 app="$(cd "$(dirname "$app")" && pwd)/$(basename "$app")"
 out="$(cd "$(dirname "$out")" && pwd)/$(basename "$out")"
 
-if [[ -d "/Volumes/DND Sync" ]]; then
-	printf 'Ejecting leftover /Volumes/DND Sync so this image can use that volume name.\n' >&2
-	hdiutil detach "/Volumes/DND Sync" -quiet || hdiutil detach "/Volumes/DND Sync" -force
+volume="Focus Sync"
+if [[ -d "/Volumes/${volume}" ]]; then
+	printf 'Ejecting leftover /Volumes/%s so this image can use that volume name.\n' "$volume" >&2
+	hdiutil detach "/Volumes/${volume}" -quiet || hdiutil detach "/Volumes/${volume}" -force
 fi
 
 venv="$(mktemp -d "${TMPDIR:-/tmp}/dndsync-dmgbuild.XXXXXX")"
+stage="$(mktemp -d "${TMPDIR:-/tmp}/dndsync-dmgstage.XXXXXX")"
+staged="${stage}/Focus Sync.app"
 cleanup() {
-	rm -rf "$venv"
+	rm -rf "$venv" "$stage"
 }
 trap cleanup EXIT
+
+ditto "$app" "$staged"
 
 python3 -m venv "$venv"
 "$venv/bin/pip" install --disable-pip-version-check -q -r "$req"
 
 rm -f "$out"
-"$venv/bin/dmgbuild" -s "$settings" -D "app=$app" "DND Sync" "$out"
+"$venv/bin/dmgbuild" -s "$settings" -D "app=$staged" "$volume" "$out"
 printf 'Built %s\n' "$out"

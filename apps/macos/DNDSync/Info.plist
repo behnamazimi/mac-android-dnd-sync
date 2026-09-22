@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>DND Sync finds your phone on this Wi-Fi so they can sync without the internet.</string>
+	<string>Focus Sync finds your phone on this Wi-Fi so they can sync without the internet.</string>
 	<key>NSBonjourServices</key>
 	<array>
 		<!-- Must match LanConstants.serviceType -->

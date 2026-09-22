@@ -21,8 +21,8 @@
 		AA0000000000000000000004 /* ShortcutRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000015 /* ShortcutRunner.swift */; };
 		AA0000000000000000000005 /* FocusStatusObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000016 /* FocusStatusObserver.swift */; };
 		AA0000000000000000000006 /* FocusHarnessModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000017 /* FocusHarnessModel.swift */; };
-		AA0000000000000000000007 /* DND Sync On.shortcut in Resources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000018 /* DND Sync On.shortcut */; };
-		AA0000000000000000000008 /* DND Sync Off.shortcut in Resources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000019 /* DND Sync Off.shortcut */; };
+		AA0000000000000000000007 /* Focus Sync On.shortcut in Resources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000018 /* Focus Sync On.shortcut */; };
+		AA0000000000000000000008 /* Focus Sync Off.shortcut in Resources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000019 /* Focus Sync Off.shortcut */; };
 		AA0000000000000000000009 /* LocalCommandServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000001A /* LocalCommandServer.swift */; };
 		AA000000000000000000000A /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000001B /* AppDelegate.swift */; };
 		AA000000000000000000000B /* ApnsPushReceiver.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000001C /* ApnsPushReceiver.swift */; };
@@ -83,8 +83,8 @@
 		AA0000000000000000000015 /* ShortcutRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutRunner.swift; sourceTree = "<group>"; };
 		AA0000000000000000000016 /* FocusStatusObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusStatusObserver.swift; sourceTree = "<group>"; };
 		AA0000000000000000000017 /* FocusHarnessModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusHarnessModel.swift; sourceTree = "<group>"; };
-		AA0000000000000000000018 /* DND Sync On.shortcut */ = {isa = PBXFileReference; lastKnownFileType = file; path = "DND Sync On.shortcut"; sourceTree = "<group>"; };
-		AA0000000000000000000019 /* DND Sync Off.shortcut */ = {isa = PBXFileReference; lastKnownFileType = file; path = "DND Sync Off.shortcut"; sourceTree = "<group>"; };
+		AA0000000000000000000018 /* Focus Sync On.shortcut */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Focus Sync On.shortcut"; sourceTree = "<group>"; };
+		AA0000000000000000000019 /* Focus Sync Off.shortcut */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Focus Sync Off.shortcut"; sourceTree = "<group>"; };
 		AA000000000000000000001A /* LocalCommandServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalCommandServer.swift; sourceTree = "<group>"; };
 		AA000000000000000000001B /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		AA000000000000000000001C /* ApnsPushReceiver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApnsPushReceiver.swift; sourceTree = "<group>"; };
@@ -221,8 +221,8 @@
 		AA0000000000000000000034 /* Shortcuts */ = {
 			isa = PBXGroup;
 			children = (
-				AA0000000000000000000018 /* DND Sync On.shortcut */,
-				AA0000000000000000000019 /* DND Sync Off.shortcut */,
+				AA0000000000000000000018 /* Focus Sync On.shortcut */,
+				AA0000000000000000000019 /* Focus Sync Off.shortcut */,
 			);
 			path = Shortcuts;
 			sourceTree = "<group>";
@@ -335,8 +335,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				AA0000000000000000000003 /* Assets.xcassets in Resources */,
-				AA0000000000000000000007 /* DND Sync On.shortcut in Resources */,
-				AA0000000000000000000008 /* DND Sync Off.shortcut in Resources */,
+				AA0000000000000000000007 /* Focus Sync On.shortcut in Resources */,
+				AA0000000000000000000008 /* Focus Sync Off.shortcut in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -539,10 +539,10 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = DNDSync/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "DND Sync";
+				INFOPLIST_KEY_CFBundleDisplayName = "Focus Sync";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
-				INFOPLIST_KEY_NSAppleEventsUsageDescription = "DND Sync uses Shortcuts to turn Focus on and off.";
+				INFOPLIST_KEY_NSAppleEventsUsageDescription = "Focus Sync uses Shortcuts to turn Focus on and off.";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -569,10 +569,10 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = DNDSync/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "DND Sync";
+				INFOPLIST_KEY_CFBundleDisplayName = "Focus Sync";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
-				INFOPLIST_KEY_NSAppleEventsUsageDescription = "DND Sync uses Shortcuts to turn Focus on and off.";
+				INFOPLIST_KEY_NSAppleEventsUsageDescription = "Focus Sync uses Shortcuts to turn Focus on and off.";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

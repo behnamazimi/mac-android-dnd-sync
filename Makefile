@@ -392,7 +392,7 @@ package-mac-dmg:
 	}
 	@version="$$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' \
 		"$(MAC_EXPORT)/DNDSync.app/Contents/Info.plist")"; \
-	name="Mac-Android-DND-Sync-$$version.dmg"; \
+	name="Focus-Sync-$$version.dmg"; \
 	./scripts/package-mac-dmg.sh "$(MAC_EXPORT)/DNDSync.app" "$(MAC_BUILD_DIR)/$$name"
 
 dmg-mac: notarize-mac package-mac-dmg
