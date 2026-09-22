@@ -1,5 +1,8 @@
 package com.dndsync.android.sync
 
+import android.util.Log
+import com.dndsync.android.BuildConfig
+
 import com.dndsync.android.lan.LanUiState
 import com.dndsync.android.pair.UnpairContext
 import com.dndsync.proto.v1.CloudEnvelope
@@ -176,15 +179,22 @@ class SyncSession(
                 val origin = Origin(++originGeneration)
                 currentOrigin = origin
                 origin.lanJob = scope.launch {
+                    val nearby = nearbyGranted.get()
+                    debug("flip on=${state.on} unix_ms=${state.unixMs} nearby=$nearby")
                     val acked = try {
-                        if (nearbyGranted.get()) lan.deliverState(state) else false
+                        if (nearby) lan.deliverState(state) else false
                     } catch (cancelled: CancellationException) {
                         throw cancelled
+                    } catch (error: Exception) {
+                        debug("lan deliver failed ${error.message}")
+                        throw error
                     }
                     if (!isActive || origin.generation != originGeneration) {
+                        debug("flip dropped stale unix_ms=${state.unixMs}")
                         return@launch
                     }
                     if (acked) {
+                        debug("lan ack unix_ms=${state.unixMs}")
                         pair.persistLastSync(
                             unixMs = state.unixMs,
                             on = state.on,
@@ -193,6 +203,7 @@ class SyncSession(
                         )
                         return@launch
                     }
+                    debug("cloud fallback unix_ms=${state.unixMs}")
                     origin.cloudStarted.set(true)
                     origin.cloudJob = ioScope.launch {
                         postEnvelope(state)
@@ -221,6 +232,7 @@ class SyncSession(
 
     private fun postEnvelope(state: DndState) {
         if (!pair.joined || pair.forwarderURL.isEmpty() || pair.pairSecret.isEmpty()) {
+            debug("cloud post skipped joined=${pair.joined}")
             return
         }
         ioScope.launch {
@@ -237,8 +249,10 @@ class SyncSession(
                     pair.pairSecret,
                     envelope.toByteArray(),
                 )
+                debug("cloud post ok unix_ms=${state.unixMs}")
                 pair.noteCloudSuccess()
             } catch (error: Exception) {
+                debug("cloud post failed ${error.message}")
                 if (error is com.dndsync.android.cloud.ForwarderException.Unauthorized) {
                     pair.noteCloudUnauthorized()
                 } else {
@@ -274,6 +288,15 @@ class SyncSession(
         try {
             cloud.deletePair(context.forwarderUrl, context.pairId, context.pairSecret)
         } catch (_: Exception) {
+        }
+    }
+
+    private fun debug(message: String) {
+        if (!BuildConfig.DEBUG) return
+        try {
+            Log.d("DndSync", "[DEBUG] $message")
+        } catch (_: RuntimeException) {
+            // JVM unit tests have no Android log.
         }
     }
 }

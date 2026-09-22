@@ -203,8 +203,12 @@ app.post("/v1/pairs/:pairId/envelopes", async (c) => {
   }
   const peer = await getDevice(pairId, otherSender(envelope.sender));
   if (!peer?.token) {
+    console.error(`[DEBUG] envelope sender=${envelope.sender} peer has no token`);
     return c.json({ error: "peer not registered" }, 409);
   }
+  console.log(
+    `[DEBUG] envelope sender=${envelope.sender} peer=${peer.platform} apns=${peer.apnsEnvironment ?? "unset"}`,
+  );
   const envelopeB64 = Buffer.from(bytes).toString("base64");
   const previewSize = Buffer.byteLength(
     JSON.stringify({
@@ -218,7 +222,11 @@ app.post("/v1/pairs/:pairId/envelopes", async (c) => {
   }
   try {
     if (peer.platform === "apns") {
-      await sendSilentApns(peer.token, envelopeB64, peer.apnsEnvironment);
+      const delivery = await sendSilentApns(peer.token, envelopeB64, peer.apnsEnvironment);
+      c.header("X-Apns-Host", delivery.host);
+      c.header("X-Apns-Id", delivery.apnsId);
+      c.header("X-Apns-Token-Suffix", delivery.tokenSuffix);
+      c.header("X-Apns-Push-Type", delivery.pushType);
     } else if (peer.platform === "fcm") {
       await sendDataFcm(peer.token, envelopeB64);
     } else {

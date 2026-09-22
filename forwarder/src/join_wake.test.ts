@@ -5,12 +5,13 @@ import { wakeMacOnJoin } from "./join_wake.js";
 
 test("joined push has no envelope and no on/off bit", () => {
   const body = JSON.parse(silentPushBody({ joined: true })) as {
-    aps: { "content-available": number };
+    aps: { "content-available": number; "interruption-level"?: string };
     joined?: boolean;
     envelope_b64?: string;
     command?: string;
   };
   assert.equal(body.aps["content-available"], 1);
+  assert.equal(body.aps["interruption-level"], "passive");
   assert.equal(body.joined, true);
   assert.equal(body.envelope_b64, undefined);
   assert.equal(body.command, undefined);

@@ -16,6 +16,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         // pre-explained alongside the Shortcuts/Automation permission, rather
         // than fired silently at launch.
         NSApplication.shared.registerForRemoteNotifications()
+        ApnsPushReceiver.debug("apns listener ready")
         chrome = ProductChrome()
     }
 
@@ -59,6 +60,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         _ application: NSApplication,
         didReceiveRemoteNotification userInfo: [String: Any]
     ) {
+        ApnsPushReceiver.debug("apns system callback")
         ApnsPushReceiver.shared.didReceive(userInfo: userInfo)
     }
 

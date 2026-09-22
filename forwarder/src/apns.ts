@@ -93,12 +93,25 @@ function makeJwt(): string {
   return token;
 }
 
+const COLLAPSE_ID = "dndsync";
+
 export function silentPushBody(fields: Record<string, unknown>): string {
   return JSON.stringify({
-    aps: { "content-available": 1 },
+    aps: {
+      "content-available": 1,
+      "interruption-level": "passive",
+      alert: { title: "Do Not Disturb Sync" },
+    },
     ...fields,
   });
 }
+
+export type ApnsDelivery = {
+  host: string;
+  apnsId: string;
+  tokenSuffix: string;
+  pushType: "alert";
+};
 
 export async function sendJoinedApns(
   deviceTokenHex: string,
@@ -111,8 +124,8 @@ export async function sendSilentApns(
   deviceTokenHex: string,
   envelopeB64: string,
   environment?: ApnsEnvironment,
-): Promise<void> {
-  await postSilentApns(
+): Promise<ApnsDelivery> {
+  return postSilentApns(
     deviceTokenHex,
     silentPushBody({ envelope_b64: envelopeB64 }),
     environment,
@@ -123,19 +136,26 @@ async function postSilentApns(
   deviceTokenHex: string,
   body: string,
   environment?: ApnsEnvironment,
-): Promise<void> {
+): Promise<ApnsDelivery> {
   const jwt = makeJwt();
   if (Buffer.byteLength(body, "utf8") > 4096) {
     throw new Error("APNs payload exceeds 4 KiB");
   }
   const token = deviceTokenHex.trim().replace(/\s+/g, "");
   const hosts = hostsForPush(environment);
+  const tokenSuffix = token.slice(-8);
+  console.log(
+    `[DEBUG] apns env=${environment ?? "unset"} token=…${tokenSuffix} hosts=${hosts.join(" ")}`,
+  );
   let last: Error | undefined;
   for (let i = 0; i < hosts.length; i++) {
     try {
-      await postOnce(hosts[i], token, body, jwt);
-      return;
+      const apnsId = await postOnce(hosts[i], token, body, jwt);
+      console.log(`[DEBUG] apns ${hosts[i]} 200 id=${apnsId}`);
+      return { host: hosts[i], apnsId, tokenSuffix, pushType: "alert" };
     } catch (error) {
+      const message = error instanceof Error ? error.message : "push failed";
+      console.error(`[DEBUG] apns ${hosts[i]} ${message}`);
       if (!(error instanceof ApnsStatusError) || !error.wrongEnvironment || i === hosts.length - 1) {
         throw error;
       }
@@ -159,11 +179,12 @@ async function postOnce(
   token: string,
   body: string,
   jwt: string,
-): Promise<void> {
+): Promise<string> {
   const client: ClientHttp2Session = connect(host);
   try {
-    const { status, responseBody } = await new Promise<{
+    const { status, apnsId, responseBody } = await new Promise<{
       status: string;
+      apnsId: string;
       responseBody: string;
     }>((resolve, reject) => {
       client.once("error", reject);
@@ -172,20 +193,24 @@ async function postOnce(
         ":path": `/3/device/${token}`,
         authorization: `bearer ${jwt}`,
         "apns-topic": TOPIC,
-        "apns-push-type": "background",
-        "apns-priority": "5",
+        "apns-push-type": "alert",
+        "apns-priority": "10",
+        "apns-collapse-id": COLLAPSE_ID,
         "content-type": "application/json",
       });
       let status = "";
+      let apnsId = "";
       const chunks: Buffer[] = [];
       req.on("response", (headers) => {
         status = String(headers[":status"] ?? "");
+        apnsId = String(headers["apns-id"] ?? "");
       });
       req.on("data", (chunk) => chunks.push(chunk as Buffer));
       req.on("error", reject);
       req.on("end", () => {
         resolve({
           status,
+          apnsId,
           responseBody: Buffer.concat(chunks).toString("utf8"),
         });
       });
@@ -194,6 +219,7 @@ async function postOnce(
     if (status !== "200") {
       throw new ApnsStatusError(status, responseBody);
     }
+    return apnsId;
   } finally {
     client.close();
   }

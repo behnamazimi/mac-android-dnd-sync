@@ -254,7 +254,10 @@ at deploy time, not on every request.
 started reporting an environment. A Debug build sends `sandbox` with its
 token and a Developer ID or App Store build sends `production`. The
 forwarder stores that next to the token and posts to the matching Apple
-host. A record with no environment still tries `APNS_HOST` first and, on
+host. The Mac wake is an alert-priority push (`apns-priority` 10). A
+background priority-5 push is accepted by Apple and then not delivered to
+this menu-bar app. The app discards that notification. A record with no
+environment still tries `APNS_HOST` first and, on
 `BadDeviceToken` or `BadEnvironmentKeyInToken`, the other host once. Apple
 still issues a different device token per environment.
 
