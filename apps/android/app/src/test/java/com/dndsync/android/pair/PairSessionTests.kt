@@ -114,7 +114,7 @@ class PairSessionTests {
         val session = session(forwarder, InMemoryPairStore(), token = { "fcm-token" })
         session.pastePayload(payloadJson())
         assertFalse(session.joined)
-        assertEquals(CloudCopy.JOIN_FAILED, session.ui.value.pairError)
+        assertEquals(CloudCopy.PAIRING_CODE_REJECTED, session.ui.value.pairError)
     }
 
     private fun session(

@@ -14,6 +14,7 @@ final class ProductRoutingTests: XCTestCase {
         XCTAssertEqual(
             MacRouting.destination(progress(
                 hasSeenWelcome: true,
+                notificationsGranted: true,
                 probedAutomation: true,
                 onExists: true
             )),
@@ -25,6 +26,7 @@ final class ProductRoutingTests: XCTestCase {
         XCTAssertEqual(
             MacRouting.destination(progress(
                 hasSeenWelcome: true,
+                notificationsGranted: true,
                 probedAutomation: true,
                 offExists: true
             )),
@@ -36,6 +38,7 @@ final class ProductRoutingTests: XCTestCase {
         XCTAssertEqual(
             MacRouting.destination(progress(
                 hasSeenWelcome: true,
+                notificationsGranted: true,
                 probedAutomation: true,
                 onExists: true,
                 offExists: true
@@ -48,6 +51,7 @@ final class ProductRoutingTests: XCTestCase {
         XCTAssertEqual(
             MacRouting.destination(progress(
                 hasSeenWelcome: true,
+                notificationsGranted: true,
                 probedAutomation: true,
                 onExists: true,
                 offExists: true,
@@ -57,11 +61,26 @@ final class ProductRoutingTests: XCTestCase {
         )
     }
 
+    func testNotificationsBlockPairedMac() {
+        XCTAssertEqual(
+            MacRouting.destination(progress(
+                hasSeenWelcome: true,
+                paired: true,
+                probedAutomation: true,
+                onExists: true,
+                offExists: true,
+                loginSkipped: true
+            )),
+            .automation
+        )
+    }
+
     func testPairedSkipsWizardEvenIfShortcutsMissing() {
         XCTAssertEqual(
             MacRouting.destination(progress(
                 hasSeenWelcome: true,
                 paired: true,
+                notificationsGranted: true,
                 automationDenied: true,
                 probedAutomation: true
             )),
@@ -73,6 +92,7 @@ final class ProductRoutingTests: XCTestCase {
         let paired = progress(
             hasSeenWelcome: true,
             paired: true,
+            notificationsGranted: true,
             probedAutomation: true,
             onExists: true,
             offExists: true,
@@ -88,6 +108,7 @@ final class ProductRoutingTests: XCTestCase {
         XCTAssertEqual(
             MacRouting.destination(progress(
                 paired: true,
+                notificationsGranted: true,
                 probedAutomation: true,
                 onExists: true,
                 offExists: true,
@@ -102,6 +123,7 @@ final class ProductRoutingTests: XCTestCase {
         XCTAssertEqual(
             MacRouting.destination(progress(
                 hasSeenWelcome: true,
+                notificationsGranted: true,
                 probedAutomation: true,
                 onExists: true,
                 offExists: true,
@@ -116,6 +138,7 @@ final class ProductRoutingTests: XCTestCase {
         XCTAssertFalse(
             MacRouting.needsNetwork(progress(
                 hasSeenWelcome: true,
+                notificationsGranted: true,
                 probedAutomation: true,
                 onExists: true,
                 offExists: true
@@ -124,16 +147,26 @@ final class ProductRoutingTests: XCTestCase {
         XCTAssertTrue(
             MacRouting.needsNetwork(progress(
                 hasSeenWelcome: true,
+                notificationsGranted: true,
                 probedAutomation: true,
                 onExists: true,
                 offExists: true,
                 loginSkipped: true
             ))
         )
+        XCTAssertFalse(
+            MacRouting.needsNetwork(progress(
+                hasSeenWelcome: true,
+                paired: true,
+                automationDenied: true,
+                probedAutomation: true
+            ))
+        )
         XCTAssertTrue(
             MacRouting.needsNetwork(progress(
                 hasSeenWelcome: true,
                 paired: true,
+                notificationsGranted: true,
                 automationDenied: true,
                 probedAutomation: true
             ))
@@ -231,6 +264,7 @@ final class ProductRoutingTests: XCTestCase {
     private func progress(
         hasSeenWelcome: Bool = false,
         paired: Bool = false,
+        notificationsGranted: Bool = false,
         automationDenied: Bool = false,
         probedAutomation: Bool = false,
         onExists: Bool = false,
@@ -241,6 +275,7 @@ final class ProductRoutingTests: XCTestCase {
         OnboardingProgress(
             hasSeenWelcome: hasSeenWelcome,
             paired: paired,
+            notificationsGranted: notificationsGranted,
             automationDenied: automationDenied,
             probedAutomation: probedAutomation,
             onExists: onExists,

@@ -33,6 +33,7 @@ final class FocusHarnessModel {
         }
     }
     var notificationsGranted = false
+    var notificationsDenied = false
     var notificationsRequested = false
     var probedAutomation = false
     var automationDenied = false
@@ -102,6 +103,7 @@ final class FocusHarnessModel {
         OnboardingProgress(
             hasSeenWelcome: hasSeenWelcome,
             paired: paired,
+            notificationsGranted: notificationsGranted,
             automationDenied: automationDenied,
             probedAutomation: probedAutomation,
             onExists: onExists,
@@ -261,6 +263,7 @@ final class FocusHarnessModel {
         }
         readyAtSessionStart = paired
         refreshOffline()
+        Task { await refreshNotificationAuthorization() }
     }
 
     func importOn() {
@@ -409,6 +412,7 @@ final class FocusHarnessModel {
     func becomeActive() {
         refreshLoginItemStatus()
         focusApply.noteBecameActive()
+        Task { await refreshNotificationAuthorization() }
         if destination == .shortcuts || destination == .automation || paired {
             probeShortcuts(showMissing: destination == .shortcuts)
         }
@@ -493,6 +497,18 @@ final class FocusHarnessModel {
         focusApply.openAutomationSettings()
     }
 
+    func openNotificationSettings() {
+        let urls = [
+            "x-apple.systempreferences:com.apple.Notifications-Settings.extension",
+            "x-apple.systempreferences:com.apple.preference.notifications",
+        ]
+        for value in urls {
+            if let url = URL(string: value), NSWorkspace.shared.open(url) {
+                return
+            }
+        }
+    }
+
     func dismissWelcome() {
         guard !hasSeenWelcome else { return }
         hasSeenWelcome = true
@@ -500,20 +516,26 @@ final class FocusHarnessModel {
     }
 
     /// Grant Access screen's Continue action: fires the Automation probe
-    /// (same as the old standalone "Allow Shortcuts" step) and, in the same
-    /// tap, requests Notifications authorization — both permissions are
-    /// pre-explained together on that screen before either system prompt fires.
+    /// and requests Notifications authorization. Setup stays on this step
+    /// until notifications are authorized.
     func requestGrantAccessPermissions() {
         continueAutomation()
         Task {
-            let granted = try? await UNUserNotificationCenter.current()
+            _ = try? await UNUserNotificationCenter.current()
                 .requestAuthorization(options: [.alert, .sound])
-            notificationsGranted = granted ?? false
             notificationsRequested = true
-            if granted == true {
-                NSApplication.shared.registerForRemoteNotifications()
-            }
+            await refreshNotificationAuthorization()
         }
+    }
+
+    func refreshNotificationAuthorization() async {
+        let settings = await UNUserNotificationCenter.current().notificationSettings()
+        notificationsGranted = settings.authorizationStatus == .authorized
+        notificationsDenied = settings.authorizationStatus == .denied
+        if notificationsGranted {
+            NSApplication.shared.registerForRemoteNotifications()
+        }
+        refreshOffline()
     }
 
     private func handlePath(_ satisfied: Bool) {

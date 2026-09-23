@@ -31,6 +31,31 @@ final class PairSessionTests: XCTestCase {
         XCTAssertNotNil(store.stored?.peerPublicKeyB64)
     }
 
+    func testUnjoinedUnauthorizedPeerReregistersSameCode() async {
+        let forwarder = FakePairForwarder()
+        let session = PairSession(
+            forwarder: forwarder,
+            store: InMemoryPairStore(),
+            secrets: PairSecretsSource(baseURL: "https://example.invalid", appKey: "key"),
+            apnsToken: { "token-hex" },
+            deviceName: { "Test Mac" }
+        )
+        await session.create()
+        let pairId = session.pairId
+        let payload = session.pairPayloadJSON
+        forwarder.created = false
+        forwarder.listError = ForwarderClientError.httpStatus(401, "")
+
+        await session.fetchPeer()
+
+        XCTAssertTrue(forwarder.created)
+        XCTAssertEqual(session.pairId, pairId)
+        XCTAssertEqual(session.pairPayloadJSON, payload)
+        XCTAssertFalse(session.pairingExpired)
+        XCTAssertFalse(session.qrNeedsRetry)
+        XCTAssertEqual(session.qrMessage, ProductCopy.waitingPhone)
+    }
+
     func testCreateWithoutAppKeyShowsRetryNotInternetCall() async {
         let forwarder = FakePairForwarder()
         let session = PairSession(

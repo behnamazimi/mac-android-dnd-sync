@@ -173,7 +173,8 @@ Each is a single **Set Focus** action for system **Do Not Disturb**. To
 recreate them, build matching actions in Shortcuts.app with those exact
 names, export the `.shortcut` files into that folder, and rebuild.
 
-Wizard order: **Allow Shortcuts** (Automation prompt) → **Add the On
+Wizard order: **Allow Shortcuts and Notifications** (both prompts; the
+rest of the wizard waits until notifications are allowed) → **Add the On
 shortcut** → **Add the Off shortcut** → **Open at login** (skippable: a
 fully quit Mac can't apply Focus from the phone) → **Scan this from the
 phone** (Copy pairing code if the camera can't read the QR). Neither app is
@@ -258,11 +259,11 @@ at deploy time, not on every request.
 started reporting an environment. A Debug build sends `sandbox` with its
 token and a Developer ID or App Store build sends `production`. The
 forwarder stores that next to the token and posts to the matching Apple
-host. The Mac wake is an alert push at `apns-priority` 5, so Apple may
-defer it for power. The app discards that notification. A record with no
-environment still tries `APNS_HOST` first and, on
-`BadDeviceToken` or `BadEnvironmentKeyInToken`, the other host once. Apple
-still issues a different device token per environment.
+host. The Mac wake is an immediate alert push at `apns-priority` 10.
+The app discards that notification. A record with no environment still
+tries `APNS_HOST` first and, on `BadDeviceToken` or
+`BadEnvironmentKeyInToken`, the other host once. Apple still issues a
+different device token per environment.
 
 Firestore stores `secretHash`, device push tokens, and for the Mac the
 APNs environment that issued the token (`sandbox` or `production`). It
@@ -296,12 +297,13 @@ device.
   a Mac flip still arrives by push; rapid flips or a vetoed Android off
   don't ping-pong. The Nearby chip is the last completed path, not a live
   socket.
-- **Phase 5 — Mac APNs harness.** A scripted silent push
-  (`content-available`, no banner/sound/badge) applies Focus the same way
-  loopback does. `make apns TOKEN=… CMD=on|off` needs `APNS_KEY_ID` /
-  `APNS_TEAM_ID` exported and a paid Apple team with Push Notifications
-  enabled on `com.dndsync.macos`. Must see: Diagnostics shows **APNs:
-  registered**; the push (not just loopback curl) flips Do Not Disturb.
+- **Phase 5 — Mac APNs harness.** An immediate alert push
+  (`apns-push-type` alert, `apns-priority` 10, no sound) applies Focus the
+  same way loopback does. The app discards the banner. `make apns TOKEN=…
+  CMD=on|off` needs `APNS_KEY_ID` / `APNS_TEAM_ID` exported and a paid
+  Apple team with Push Notifications enabled on `com.dndsync.macos`. Must
+  see: Diagnostics shows **APNs: registered**; the push (not just loopback
+  curl) flips Do Not Disturb.
 - **Phase 6.A — forwarder, off-LAN.** Both apps registered against the
   deployed forwarder; a flip on one reaches the other in ~10s over cellular
   / off that Wi-Fi. Must see: Firestore has `secretHash` and both device

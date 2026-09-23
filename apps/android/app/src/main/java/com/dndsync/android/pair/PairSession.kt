@@ -378,7 +378,11 @@ class PairSession(
                         pairId = storedPairId,
                         joinSucceeded = false,
                         waitingForFcm = false,
-                        pairError = CloudCopy.JOIN_FAILED,
+                        pairError = if (error.isUnauthorized()) {
+                            CloudCopy.PAIRING_CODE_REJECTED
+                        } else {
+                            CloudCopy.JOIN_FAILED
+                        },
                         pairingExpired = error.isUnauthorized(),
                         macDeviceName = macDeviceName,
                     )

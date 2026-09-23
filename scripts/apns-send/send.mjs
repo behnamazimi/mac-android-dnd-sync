@@ -5,11 +5,8 @@ import { createPrivateKey, sign } from "node:crypto";
 import { connect } from "node:http2";
 
 const usage =
-  "Usage: node scripts/apns-send/send.mjs <device-token-hex> <on|off> [--alert] [AuthKey.p8]";
-const alertMode = process.argv.includes("--alert");
-const [token, command, keyPathArg] = process.argv
-  .slice(2)
-  .filter((arg) => arg !== "--alert");
+  "Usage: node scripts/apns-send/send.mjs <device-token-hex> <on|off> [AuthKey.p8]";
+const [token, command, keyPathArg] = process.argv.slice(2);
 
 if (!token || (command !== "on" && command !== "off")) {
   console.error(usage);
@@ -38,17 +35,10 @@ const signature = sign("SHA256", Buffer.from(signingInput), {
 });
 const jwt = `${signingInput}.${base64url(signature)}`;
 
-const body = JSON.stringify(
-  alertMode
-    ? {
-        aps: { alert: { title: "DND Sync diagnostic" } },
-        command,
-      }
-    : {
-        aps: { "content-available": 1 },
-        command,
-      },
-);
+const body = JSON.stringify({
+  aps: { alert: { title: "Do Not Disturb Sync" } },
+  command,
+});
 
 const apnsHost = process.env.APNS_HOST || "https://api.sandbox.push.apple.com";
 const client = connect(apnsHost);
@@ -87,8 +77,8 @@ function sendPush(client, { token, jwt, body }) {
       ":path": `/3/device/${token}`,
       authorization: `bearer ${jwt}`,
       "apns-topic": "com.dndsync.macos",
-      "apns-push-type": alertMode ? "alert" : "background",
-      "apns-priority": alertMode ? "10" : "5",
+      "apns-push-type": "alert",
+      "apns-priority": "10",
       "content-type": "application/json",
     });
 

@@ -1,17 +1,17 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { apnsHosts, hostsForPush, isWrongApnsEnvironment, silentPushBody } from "./apns.js";
+import { alertPushBody, apnsHosts, hostsForPush, isWrongApnsEnvironment } from "./apns.js";
 import { wakeMacOnJoin } from "./join_wake.js";
 
 test("joined push has no envelope and no on/off bit", () => {
-  const body = JSON.parse(silentPushBody({ joined: true })) as {
-    aps: { "content-available": number; "interruption-level"?: string };
+  const body = JSON.parse(alertPushBody({ joined: true })) as {
+    aps: { alert?: { title?: string }; "content-available"?: number };
     joined?: boolean;
     envelope_b64?: string;
     command?: string;
   };
-  assert.equal(body.aps["content-available"], 1);
-  assert.equal(body.aps["interruption-level"], "passive");
+  assert.equal(body.aps.alert?.title, "Do Not Disturb Sync");
+  assert.equal(body.aps["content-available"], undefined);
   assert.equal(body.joined, true);
   assert.equal(body.envelope_b64, undefined);
   assert.equal(body.command, undefined);

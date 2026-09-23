@@ -37,6 +37,7 @@ object ProductCopy {
     const val JOIN = "Connect"
     const val BAD_PAYLOAD = "That isn't a pairing code."
     const val JOIN_FAILED = "Couldn't connect. Check the internet and try again."
+    const val PAIRING_CODE_REJECTED = "This code isn't valid anymore. Scan the QR on your Mac again."
     const val DOWNLOAD_MAC_APP = "Download the Mac app"
 
     // Connecting

@@ -18,11 +18,15 @@ enum ProductCopy {
     static let automationRowTitle = "Run Shortcuts"
     static let automationRowSubtitle = "Lets \(appName) turn Focus on or off when your phone does."
     static let notificationsRowTitle = "Send Notifications"
-    static let notificationsRowSubtitle = "We'll ping you if a change didn't go through."
+    static let notificationsRowSubtitle =
+        "Lets this Mac follow your phone when you're not on the same Wi-Fi."
     static let continueLabel = "Continue"
     static let automationDenied =
         "Shortcuts access is off. In System Settings → Privacy & Security → Automation, allow \(appName) to control Shortcuts."
+    static let notificationsDenied =
+        "Notifications are off. Allow them in System Settings so this Mac can follow your phone."
     static let openAutomation = "Open Automation settings"
+    static let openNotifications = "Open Notifications settings"
 
     static let shortcutsTitle = "Add two shortcuts"
     static let shortcutsBody =
@@ -123,6 +127,7 @@ enum MacDestination: Equatable, Hashable {
 struct OnboardingProgress: Equatable {
     var hasSeenWelcome: Bool
     var paired: Bool
+    var notificationsGranted: Bool
     var automationDenied: Bool
     var probedAutomation: Bool
     var onExists: Bool
@@ -133,6 +138,10 @@ struct OnboardingProgress: Equatable {
 
 enum MacRouting {
     static func destination(_ progress: OnboardingProgress) -> MacDestination {
+        if !progress.notificationsGranted {
+            if !progress.hasSeenWelcome && !progress.paired { return .welcome }
+            return .automation
+        }
         if progress.paired {
             return .status
         }
@@ -146,6 +155,9 @@ enum MacRouting {
     }
 
     static func needsNetwork(_ progress: OnboardingProgress) -> Bool {
+        if !progress.notificationsGranted {
+            return false
+        }
         if progress.paired {
             return true
         }

@@ -95,11 +95,9 @@ function makeJwt(): string {
 
 const COLLAPSE_ID = "dndsync";
 
-export function silentPushBody(fields: Record<string, unknown>): string {
+export function alertPushBody(fields: Record<string, unknown>): string {
   return JSON.stringify({
     aps: {
-      "content-available": 1,
-      "interruption-level": "passive",
       alert: { title: "Do Not Disturb Sync" },
     },
     ...fields,
@@ -117,22 +115,22 @@ export async function sendJoinedApns(
   deviceTokenHex: string,
   environment?: ApnsEnvironment,
 ): Promise<void> {
-  await postSilentApns(deviceTokenHex, silentPushBody({ joined: true }), environment);
+  await postAlertApns(deviceTokenHex, alertPushBody({ joined: true }), environment);
 }
 
-export async function sendSilentApns(
+export async function sendAlertApns(
   deviceTokenHex: string,
   envelopeB64: string,
   environment?: ApnsEnvironment,
 ): Promise<ApnsDelivery> {
-  return postSilentApns(
+  return postAlertApns(
     deviceTokenHex,
-    silentPushBody({ envelope_b64: envelopeB64 }),
+    alertPushBody({ envelope_b64: envelopeB64 }),
     environment,
   );
 }
 
-async function postSilentApns(
+async function postAlertApns(
   deviceTokenHex: string,
   body: string,
   environment?: ApnsEnvironment,
@@ -194,7 +192,7 @@ async function postOnce(
         authorization: `bearer ${jwt}`,
         "apns-topic": TOPIC,
         "apns-push-type": "alert",
-        "apns-priority": "5",
+        "apns-priority": "10",
         "apns-collapse-id": COLLAPSE_ID,
         "content-type": "application/json",
       });

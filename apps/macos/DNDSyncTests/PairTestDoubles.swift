@@ -17,6 +17,9 @@ final class FakePairForwarder: PairForwarder {
     var registeredTokens: [String] = []
     var apnsEnvironments: [String] = []
     var error: Error?
+    /// Applied only to `listDevices`, so a 401 while checking the peer can
+    /// still be followed by a successful `createPair`.
+    var listError: Error?
 
     func registerDevice(
         baseURL: String,
@@ -54,6 +57,7 @@ final class FakePairForwarder: PairForwarder {
         pairId: String,
         secret: String
     ) async throws -> [ForwarderDevice] {
+        if let listError { throw listError }
         if let error { throw error }
         return devices
     }

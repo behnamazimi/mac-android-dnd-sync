@@ -11,11 +11,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         // installs is the one thing that's always present.
         NSApp.setActivationPolicy(.accessory)
         UNUserNotificationCenter.current().delegate = self
-        // Notifications authorization is now requested explicitly from the
-        // Grant Access onboarding step (FocusHarnessModel.requestGrantAccessPermissions()),
-        // pre-explained alongside the Shortcuts/Automation permission, rather
-        // than fired silently at launch.
-        NSApplication.shared.registerForRemoteNotifications()
+        // Remote registration waits until notification permission is granted.
+        // Registering first files the topic as non-waking, and later pushes
+        // are dropped.
         ApnsPushReceiver.debug("apns listener ready")
         ApnsPushReceiver.reregisterIfAuthorized()
         chrome = ProductChrome()

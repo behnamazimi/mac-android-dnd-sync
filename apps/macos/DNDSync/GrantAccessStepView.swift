@@ -4,7 +4,8 @@ struct GrantAccessStepView: View {
     @Bindable var model: FocusHarnessModel
 
     private var shortcutsGranted: Bool { model.probedAutomation && !model.automationDenied }
-    private var denied: Bool { model.automationDenied && model.probedAutomation }
+    private var automationDenied: Bool { model.automationDenied && model.probedAutomation }
+    private var notificationsDenied: Bool { model.notificationsDenied }
 
     var body: some View {
         Form {
@@ -32,14 +33,17 @@ struct GrantAccessStepView: View {
             } header: {
                 Text(ProductCopy.grantAccessTitle)
             } footer: {
-                Text(denied ? ProductCopy.automationDenied : ProductCopy.grantAccessBody)
-                    .foregroundStyle(denied ? .red : .secondary)
+                Text(footer)
+                    .foregroundStyle(automationDenied || notificationsDenied ? .red : .secondary)
             }
             Section {
                 HStack {
                     Spacer()
-                    if denied {
+                    if automationDenied {
                         Button(ProductCopy.openAutomation, action: model.openAutomationSettings)
+                            .buttonStyle(.borderedProminent)
+                    } else if notificationsDenied {
+                        Button(ProductCopy.openNotifications, action: model.openNotificationSettings)
                             .buttonStyle(.borderedProminent)
                     } else {
                         Button(ProductCopy.continueLabel, action: model.requestGrantAccessPermissions)
@@ -49,6 +53,12 @@ struct GrantAccessStepView: View {
             }
         }
         .formStyle(.grouped)
+    }
+
+    private var footer: String {
+        if automationDenied { return ProductCopy.automationDenied }
+        if notificationsDenied { return ProductCopy.notificationsDenied }
+        return ProductCopy.grantAccessBody
     }
 }
 

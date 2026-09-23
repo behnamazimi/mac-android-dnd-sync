@@ -260,17 +260,69 @@ final class PairSession {
             onJoined?()
         } catch {
             if isUnauthorized(error) {
-                lastCloudErrorText = "Last cloud error: \(ProductCopy.pairingExpired)"
-                if aesKey != nil {
-                    autoUnpairIfExpired()
-                } else {
-                    pairingExpired = true
-                    qrMessage = ProductCopy.pairingExpired
+                // Not joined yet: the QR on screen is a local pair the server
+                // no longer accepts (deleted, or never stored). Re-post the
+                // same id and secret so that code starts working. A 401 after
+                // the phone has joined still means the pair was removed.
+                if aesKey == nil {
+                    await reregisterCurrentPair()
+                    return
                 }
+                lastCloudErrorText = "Last cloud error: \(ProductCopy.pairingExpired)"
+                autoUnpairIfExpired()
             } else {
                 lastCloudErrorText = "Last cloud error: \(error.localizedDescription)"
                 qrMessage = error.localizedDescription
             }
+            publish()
+        }
+    }
+
+    /// Writes the current id and secret to the forwarder again. The QR does
+    /// not change, so a phone that just failed to join can scan the same code.
+    private func reregisterCurrentPair() async {
+        if createPairInFlight {
+            return
+        }
+        let token = apnsToken()
+        guard secrets.canCreate, !pairId.isEmpty, !pairSecret.isEmpty, !token.isEmpty else {
+            qrMessage = token.isEmpty ? ProductCopy.waitingApns : ProductCopy.createPairFailed
+            qrNeedsRetry = !token.isEmpty
+            pairingExpired = false
+            publish()
+            return
+        }
+        createPairInFlight = true
+        defer { createPairInFlight = false }
+        forwarderURL = secrets.baseURL
+        do {
+            try await forwarder.createPair(
+                baseURL: forwarderURL,
+                appKey: secrets.appKey,
+                pairId: pairId,
+                secretHash: E2ECrypto.sha256Hex(pairSecret),
+                sender: LanConstants.senderMac,
+                platform: Self.platform,
+                token: token,
+                e2ePublicKey: e2ePublicKeyB64,
+                apnsEnvironment: Self.apnsEnvironment
+            )
+            persist()
+            createdPairForCurrentId = true
+            pairingExpired = false
+            qrNeedsRetry = false
+            refreshPayload()
+            lastRegisterText = "Last register: create-pair 201"
+            pairStatusText = "Pair: created. Waiting for the phone."
+            lastCloudErrorText = "Last cloud error: —"
+            qrMessage = ProductCopy.waitingPhone
+            publish()
+        } catch {
+            lastRegisterText = "Last register: create-pair failed"
+            lastCloudErrorText = "Last cloud error: \(error.localizedDescription)"
+            qrMessage = ProductCopy.createPairFailed
+            qrNeedsRetry = true
+            pairingExpired = false
             publish()
         }
     }

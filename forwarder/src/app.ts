@@ -8,7 +8,7 @@ import {
   safeEqualHex,
   sha256Hex,
 } from "./auth.js";
-import { isApnsEnvironment, sendJoinedApns, sendSilentApns } from "./apns.js";
+import { alertPushBody, isApnsEnvironment, sendAlertApns, sendJoinedApns } from "./apns.js";
 import { sendDataFcm } from "./fcm.js";
 import { wakeMacOnJoin } from "./join_wake.js";
 import {
@@ -210,19 +210,13 @@ app.post("/v1/pairs/:pairId/envelopes", async (c) => {
     `[DEBUG] envelope sender=${envelope.sender} peer=${peer.platform} apns=${peer.apnsEnvironment ?? "unset"}`,
   );
   const envelopeB64 = Buffer.from(bytes).toString("base64");
-  const previewSize = Buffer.byteLength(
-    JSON.stringify({
-      aps: { "content-available": 1 },
-      envelope_b64: envelopeB64,
-    }),
-    "utf8",
-  );
+  const previewSize = Buffer.byteLength(alertPushBody({ envelope_b64: envelopeB64 }), "utf8");
   if (previewSize > MAX_PUSH_JSON_BYTES) {
     return c.json({ error: "payload too large" }, 413);
   }
   try {
     if (peer.platform === "apns") {
-      const delivery = await sendSilentApns(peer.token, envelopeB64, peer.apnsEnvironment);
+      const delivery = await sendAlertApns(peer.token, envelopeB64, peer.apnsEnvironment);
       c.header("X-Apns-Host", delivery.host);
       c.header("X-Apns-Id", delivery.apnsId);
       c.header("X-Apns-Token-Suffix", delivery.tokenSuffix);
