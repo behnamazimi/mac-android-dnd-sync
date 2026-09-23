@@ -190,9 +190,9 @@ final class ShortcutsFocusApply: FocusApply {
     private var suppressLocalChange = false
 
     init() {
-        observer.onChange = { [weak self] enabled, text in
+        observer.onChange = { [weak self] enabled, text, originates in
             Task { @MainActor in
-                self?.handleFocusChange(enabled: enabled, text: text)
+                self?.handleFocusChange(enabled: enabled, text: text, originates: originates)
             }
         }
     }
@@ -359,13 +359,14 @@ final class ShortcutsFocusApply: FocusApply {
             proofAttempted = false
             proveShortcuts()
         }
+        observer.refresh()
     }
 
-    private func handleFocusChange(enabled: Bool, text: String) {
+    private func handleFocusChange(enabled: Bool, text: String, originates: Bool) {
         focusStatusText = text
         focusOn = enabled
         publish()
-        if !suppressLocalChange {
+        if originates && !suppressLocalChange {
             onLocalChange?(enabled, text)
         }
     }
