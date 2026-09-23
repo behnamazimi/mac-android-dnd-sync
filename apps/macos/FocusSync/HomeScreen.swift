@@ -81,6 +81,13 @@ struct HomeScreen: View {
                     Button(ProductCopy.openNotifications, action: model.openNotificationSettings)
                 }
             }
+            if model.focusAccess == .denied {
+                Section {
+                    Text(ProductCopy.focusStatusDenied)
+                        .foregroundStyle(.secondary)
+                    Button(ProductCopy.openFocusStatus, action: model.openFocusStatusSettings)
+                }
+            }
             Section(ProductCopy.recentActivity) {
                 if model.recentActivity.isEmpty {
                     Text(ProductCopy.neverSynced)

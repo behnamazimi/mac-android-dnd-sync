@@ -13,9 +13,11 @@ enum ProductCopy {
     static let getStarted = "Get started"
     static let welcomeCaption = "About a minute. Keep your phone nearby."
 
-    static let grantAccessTitle = "Allow notifications"
+    static let grantAccessTitle = "Allow access"
     static let grantAccessBody =
-        "So this Mac can follow your phone when you're not on the same Wi-Fi. Shortcuts access comes after you add them."
+        "So your phone can follow this Mac, and this Mac can follow your phone when you're not on the same Wi-Fi. Shortcuts access comes after you add them."
+    static let focusStatusRowTitle = "Focus Status"
+    static let focusStatusRowSubtitle = "Lets your phone follow when you turn Focus on or off on this Mac."
     static let notificationsRowTitle = "Send Notifications"
     static let notificationsRowSubtitle =
         "Lets this Mac follow your phone when you're not on the same Wi-Fi."
@@ -26,6 +28,9 @@ enum ProductCopy {
         "Notifications are off. Allow them in System Settings so this Mac can follow your phone."
     static let openAutomation = "Open Automation settings"
     static let openNotifications = "Open Notifications settings"
+    static let focusStatusDenied =
+        "Focus Status access is off, so your phone can't follow this Mac. In System Settings → Privacy & Security → Focus, allow \(appName)."
+    static let openFocusStatus = "Open Focus privacy settings"
 
     static let shortcutsTitle = "Add two shortcuts"
     static let shortcutsBody =

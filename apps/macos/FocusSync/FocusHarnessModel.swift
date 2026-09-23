@@ -34,6 +34,7 @@ final class FocusHarnessModel {
     }
     var notificationsGranted = false
     var notificationsDenied = false
+    var focusAccess: FocusStatusAccess = .notDetermined
     var notificationsRequested = false
     var probedAutomation = false
     var automationDenied = false
@@ -272,7 +273,13 @@ final class FocusHarnessModel {
         }
         readyAtSessionStart = paired
         refreshOffline()
-        Task { await refreshNotificationAuthorization() }
+        Task {
+            await refreshNotificationAuthorization()
+            // Installs set up before Focus Status existed were never asked.
+            if notificationsGranted, focusAccess == .notDetermined {
+                focusAccess = await FocusStatusAccess.request()
+            }
+        }
     }
 
     func importOn() {
@@ -546,15 +553,30 @@ final class FocusHarnessModel {
     }
 
     /// Grant Access screen's Continue action: fires the Automation probe
-    /// and requests Notifications authorization. Setup stays on this step
-    /// until notifications are authorized.
+    /// and requests Notifications, then Focus Status, authorization. Setup
+    /// stays on this step until notifications are authorized.
     func requestGrantAccessPermissions() {
         continueAutomation()
         Task {
             _ = try? await UNUserNotificationCenter.current()
                 .requestAuthorization(options: [.alert, .sound])
             notificationsRequested = true
+            if FocusStatusAccess.current == .notDetermined {
+                focusAccess = await FocusStatusAccess.request()
+            }
             await refreshNotificationAuthorization()
+        }
+    }
+
+    func openFocusStatusSettings() {
+        let urls = [
+            "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Privacy_Focus",
+            "x-apple.systempreferences:com.apple.preference.security?Privacy_Focus",
+        ]
+        for value in urls {
+            if let url = URL(string: value), NSWorkspace.shared.open(url) {
+                return
+            }
         }
     }
 
@@ -562,6 +584,7 @@ final class FocusHarnessModel {
         let settings = await UNUserNotificationCenter.current().notificationSettings()
         notificationsGranted = settings.authorizationStatus == .authorized
         notificationsDenied = settings.authorizationStatus == .denied
+        focusAccess = FocusStatusAccess.current
         if notificationsGranted {
             ApnsPushReceiver.reregisterIfAuthorized()
         }

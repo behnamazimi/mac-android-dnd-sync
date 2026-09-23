@@ -4,6 +4,8 @@
 <dict>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Focus Sync finds your phone on this Wi-Fi so they can sync without the internet.</string>
+	<key>NSFocusStatusUsageDescription</key>
+	<string>Focus Sync reads whether Focus is on so your phone can follow this Mac.</string>
 	<key>NSBonjourServices</key>
 	<array>
 		<!-- Must match LanConstants.serviceType -->

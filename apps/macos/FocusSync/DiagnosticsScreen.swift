@@ -27,6 +27,7 @@ struct DiagnosticsScreen: View {
             model.lastEnvelopePostText,
             model.lastCloudErrorText,
             model.focusStatusText,
+            "Focus status access: \(model.focusAccess)",
             model.lastRunText,
             model.lastRemoteCommandText,
             model.lastApnsText,

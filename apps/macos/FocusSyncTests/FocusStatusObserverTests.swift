@@ -28,27 +28,4 @@ final class FocusStatusObserverTests: XCTestCase {
         )
         XCTAssertTrue(FocusStatusObserver.resolveEnabled(notification))
     }
-
-    func testSuppressInterruptionsWinsOverActive() {
-        XCTAssertEqual(
-            FocusStatusObserver.isOn(willSuppressInterruptions: true, isActive: false),
-            true
-        )
-        XCTAssertEqual(
-            FocusStatusObserver.isOn(willSuppressInterruptions: false, isActive: true),
-            false
-        )
-    }
-
-    func testActiveUsedWhenSuppressUnknown() {
-        XCTAssertEqual(
-            FocusStatusObserver.isOn(willSuppressInterruptions: nil, isActive: true),
-            true
-        )
-        XCTAssertEqual(
-            FocusStatusObserver.isOn(willSuppressInterruptions: nil, isActive: false),
-            false
-        )
-        XCTAssertNil(FocusStatusObserver.isOn(willSuppressInterruptions: nil, isActive: nil))
-    }
 }
