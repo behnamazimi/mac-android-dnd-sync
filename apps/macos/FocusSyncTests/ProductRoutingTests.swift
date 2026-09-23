@@ -41,9 +41,37 @@ final class ProductRoutingTests: XCTestCase {
                 notificationsGranted: true,
                 probedAutomation: true,
                 onExists: true,
-                offExists: true
+                offExists: true,
+                shortcutsProven: true
             )),
             .loginItem
+        )
+    }
+
+    func testShortcutsStepUntilBothHaveRun() {
+        XCTAssertEqual(
+            MacRouting.destination(progress(
+                hasSeenWelcome: true,
+                notificationsGranted: true,
+                probedAutomation: true,
+                onExists: true,
+                offExists: true
+            )),
+            .shortcuts
+        )
+    }
+
+    func testAutomationDenialAfterShortcutsStaysOnShortcuts() {
+        XCTAssertEqual(
+            MacRouting.destination(progress(
+                hasSeenWelcome: true,
+                notificationsGranted: true,
+                automationDenied: true,
+                probedAutomation: true,
+                onExists: true,
+                offExists: true
+            )),
+            .shortcuts
         )
     }
 
@@ -55,6 +83,7 @@ final class ProductRoutingTests: XCTestCase {
                 probedAutomation: true,
                 onExists: true,
                 offExists: true,
+                shortcutsProven: true,
                 loginSkipped: true
             )),
             .qr
@@ -96,6 +125,7 @@ final class ProductRoutingTests: XCTestCase {
             probedAutomation: true,
             onExists: true,
             offExists: true,
+            shortcutsProven: true,
             loginSkipped: true
         )
         XCTAssertEqual(MacRouting.destination(paired), .status)
@@ -127,6 +157,7 @@ final class ProductRoutingTests: XCTestCase {
                 probedAutomation: true,
                 onExists: true,
                 offExists: true,
+                shortcutsProven: true,
                 loginEnabled: true
             )),
             .qr
@@ -151,6 +182,7 @@ final class ProductRoutingTests: XCTestCase {
                 probedAutomation: true,
                 onExists: true,
                 offExists: true,
+                shortcutsProven: true,
                 loginSkipped: true
             ))
         )
@@ -269,6 +301,7 @@ final class ProductRoutingTests: XCTestCase {
         probedAutomation: Bool = false,
         onExists: Bool = false,
         offExists: Bool = false,
+        shortcutsProven: Bool = false,
         loginEnabled: Bool = false,
         loginSkipped: Bool = false
     ) -> OnboardingProgress {
@@ -280,6 +313,7 @@ final class ProductRoutingTests: XCTestCase {
             probedAutomation: probedAutomation,
             onExists: onExists,
             offExists: offExists,
+            shortcutsProven: shortcutsProven,
             loginEnabled: loginEnabled,
             loginSkipped: loginSkipped
         )

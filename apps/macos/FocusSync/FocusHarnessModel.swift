@@ -37,6 +37,8 @@ final class FocusHarnessModel {
     var notificationsRequested = false
     var probedAutomation = false
     var automationDenied = false
+    var shortcutsProven = false
+    var provingShortcuts = false
     var onExists = false
     var offExists = false
     var showShortcutMissingError = false
@@ -108,6 +110,7 @@ final class FocusHarnessModel {
             probedAutomation: probedAutomation,
             onExists: onExists,
             offExists: offExists,
+            shortcutsProven: shortcutsProven,
             loginEnabled: loginItemEnabled,
             loginSkipped: loginSkipped
         )
@@ -120,6 +123,9 @@ final class FocusHarnessModel {
     private let pair: PairSession
     private let sync: SyncSession
     private var nextImportIsOff = false
+    /// Set when the user opens Automation settings from setup, so coming
+    /// back runs the shortcuts again instead of waiting for a real Focus flip.
+    private var retryProofOnNextActive = false
     private let pathMonitor = NetworkPathMonitor()
     private var readyAtSessionStart: Bool?
     private var coldLaunch = true
@@ -127,6 +133,7 @@ final class FocusHarnessModel {
 
     private static let hasSeenWelcomeKey = "hasSeenWelcome"
     private static let notifyOnSyncFailureKey = "notifyOnSyncFailure"
+    private static let shortcutsProvenKey = "shortcutsProven"
 
     /// `make test-mac` hosts XCTest inside this app's own process
     /// (`TEST_HOST` in the Xcode project), so this checks the environment
@@ -136,6 +143,9 @@ final class FocusHarnessModel {
     }
 
     init() {
+        if UserDefaults.standard.bool(forKey: Self.shortcutsProvenKey) {
+            focusApply.markShortcutsProven()
+        }
         let lan = LanSyncService()
         let forwarder = ForwarderClient()
         let pair = PairSession(
@@ -323,11 +333,27 @@ final class FocusHarnessModel {
         offExists = focusApply.offExists
         automationDenied = focusApply.automationDenied
         probedAutomation = focusApply.probedAutomation
+        shortcutsProven = focusApply.shortcutsProven
+        provingShortcuts = focusApply.provingShortcuts
+        if shortcutsProven {
+            UserDefaults.standard.set(true, forKey: Self.shortcutsProvenKey)
+        }
         applyDropped = focusApply.applyDropped
         shortcutStepError = focusApply.shortcutStepError
         showShortcutMissingError = focusApply.showShortcutMissingError
         lastRunText = focusApply.lastRunText
         focusStatusText = focusApply.focusStatusText
+        proveShortcutsIfReady()
+    }
+
+    /// Once both shortcuts are in Shortcuts, run them before leaving this
+    /// step. That is the Apple Event that raises the control prompt.
+    /// Skipped under XCTest: the test host is this app, and a proof run
+    /// would flip Focus on the machine running `make test-mac`.
+    private func proveShortcutsIfReady() {
+        guard !Self.isRunningUnderXCTest else { return }
+        guard destination == .shortcuts else { return }
+        focusApply.proveShortcuts()
     }
 
     private func pullPairState() {
@@ -400,9 +426,18 @@ final class FocusHarnessModel {
         refreshOffline()
     }
 
+    func recheckShortcuts() {
+        focusApply.prepareShortcutProofRetry()
+        probeShortcuts(showMissing: true)
+    }
+
     func becomeActive() {
         refreshLoginItemStatus()
         focusApply.noteBecameActive()
+        if retryProofOnNextActive {
+            retryProofOnNextActive = false
+            focusApply.prepareShortcutProofRetry()
+        }
         Task { await refreshNotificationAuthorization() }
         if destination == .shortcuts || destination == .automation || paired {
             probeShortcuts(showMissing: destination == .shortcuts)
@@ -414,6 +449,9 @@ final class FocusHarnessModel {
     }
 
     func handleDestination(_ destination: MacDestination) {
+        if destination == .shortcuts {
+            probeShortcuts(showMissing: true)
+        }
         if destination == .qr {
             if apnsTokenHex.isEmpty {
                 pair.qrMessage = ProductCopy.waitingApns
@@ -485,6 +523,7 @@ final class FocusHarnessModel {
     }
 
     func openAutomationSettings() {
+        retryProofOnNextActive = true
         focusApply.openAutomationSettings()
     }
 

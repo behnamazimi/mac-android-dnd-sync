@@ -63,4 +63,31 @@ final class FocusApplyTests: XCTestCase {
         XCTAssertFalse(focus.offExists)
         XCTAssertEqual(focus.shortcutStepError, ShortcutRunError.shortcutsUnavailable.errorDescription)
     }
+
+    func testProofSucceedsWhenBothRunsSucceed() {
+        let outcome = FocusApplyPolicy.mapProof(results: [.success(()), .success(())])
+        XCTAssertTrue(outcome.shortcutsProven)
+        XCTAssertFalse(outcome.automationDenied)
+        XCTAssertNil(outcome.shortcutStepError)
+    }
+
+    func testProofStopsWhenAutomationIsDenied() {
+        let outcome = FocusApplyPolicy.mapProof(results: [.failure(.automationDenied)])
+        XCTAssertFalse(outcome.shortcutsProven)
+        XCTAssertTrue(outcome.automationDenied)
+        XCTAssertNil(outcome.shortcutStepError)
+    }
+
+    func testProofSurfacesALaterRunFailure() {
+        let outcome = FocusApplyPolicy.mapProof(results: [
+            .success(()),
+            .failure(.shortcutNotFound(ShortcutNames.off)),
+        ])
+        XCTAssertFalse(outcome.shortcutsProven)
+        XCTAssertFalse(outcome.automationDenied)
+        XCTAssertEqual(
+            outcome.shortcutStepError,
+            ShortcutRunError.shortcutNotFound(ShortcutNames.off).errorDescription
+        )
+    }
 }

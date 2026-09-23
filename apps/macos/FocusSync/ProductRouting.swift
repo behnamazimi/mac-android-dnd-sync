@@ -13,10 +13,9 @@ enum ProductCopy {
     static let getStarted = "Get started"
     static let welcomeCaption = "About a minute. Keep your phone nearby."
 
-    static let grantAccessTitle = "Two quick permissions"
-    static let grantAccessBody = "macOS will ask twice. Here's why."
-    static let automationRowTitle = "Run Shortcuts"
-    static let automationRowSubtitle = "Lets \(appName) turn Focus on or off when your phone does."
+    static let grantAccessTitle = "Allow notifications"
+    static let grantAccessBody =
+        "So this Mac can follow your phone when you're not on the same Wi-Fi. Shortcuts access comes after you add them."
     static let notificationsRowTitle = "Send Notifications"
     static let notificationsRowSubtitle =
         "Lets this Mac follow your phone when you're not on the same Wi-Fi."
@@ -31,6 +30,8 @@ enum ProductCopy {
     static let shortcutsTitle = "Add two shortcuts"
     static let shortcutsBody =
         "Add both shortcuts so this Mac can turn Focus on and off. Adding them won't change Focus."
+    static let shortcutsProveBody =
+        "Running both shortcuts. Allow \(appName) to control Shortcuts if macOS asks. Focus turns on, then off."
     static let addOn = "Add On shortcut"
     static let checkAgain = "Check again"
     static let onMissing = "\"\(ShortcutNames.on)\" isn't in Shortcuts yet. Click Add, then come back here."
@@ -132,6 +133,9 @@ struct OnboardingProgress: Equatable {
     var probedAutomation: Bool
     var onExists: Bool
     var offExists: Bool
+    /// True after setup has run both shortcuts, so the Automation prompt
+    /// happens here instead of on the first real Focus change.
+    var shortcutsProven: Bool
     var loginEnabled: Bool
     var loginSkipped: Bool
 }
@@ -146,10 +150,11 @@ enum MacRouting {
             return .status
         }
         if !progress.hasSeenWelcome { return .welcome }
-        if !progress.probedAutomation || progress.automationDenied {
+        if !Self.shortcutsAdded(progress)
+            && (!progress.probedAutomation || progress.automationDenied) {
             return .automation
         }
-        if !progress.onExists || !progress.offExists { return .shortcuts }
+        if !Self.shortcutsReady(progress) { return .shortcuts }
         if !progress.loginEnabled && !progress.loginSkipped { return .loginItem }
         return .qr
     }
@@ -164,16 +169,26 @@ enum MacRouting {
         if !progress.hasSeenWelcome {
             return false
         }
-        if !progress.probedAutomation || progress.automationDenied {
+        if !Self.shortcutsAdded(progress)
+            && (!progress.probedAutomation || progress.automationDenied) {
             return false
         }
-        if !progress.onExists || !progress.offExists {
+        if !Self.shortcutsReady(progress) {
             return false
         }
         if !progress.loginEnabled && !progress.loginSkipped {
             return false
         }
         return true
+    }
+
+    private static func shortcutsAdded(_ progress: OnboardingProgress) -> Bool {
+        progress.onExists && progress.offExists
+    }
+
+    /// Added, and both have been run so the Automation prompt already happened.
+    private static func shortcutsReady(_ progress: OnboardingProgress) -> Bool {
+        shortcutsAdded(progress) && progress.shortcutsProven
     }
 
     static func lastError(

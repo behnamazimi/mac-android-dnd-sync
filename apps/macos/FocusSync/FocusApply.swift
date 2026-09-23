@@ -11,6 +11,10 @@ protocol FocusApply: AnyObject {
     var offExists: Bool { get }
     var automationDenied: Bool { get }
     var probedAutomation: Bool { get }
+    /// Both shortcuts have been run once during setup, which is what surfaces
+    /// the "control Shortcuts" prompt. Existence alone does not.
+    var shortcutsProven: Bool { get }
+    var provingShortcuts: Bool { get }
     var applyDropped: Bool { get }
     var shortcutStepError: String? { get }
     var showShortcutMissingError: Bool { get }
@@ -28,6 +32,8 @@ protocol FocusApply: AnyObject {
     func importOff()
     func continueAutomation()
     func assumeShortcutsPresent()
+    func proveShortcuts()
+    func prepareShortcutProofRetry()
     func openAutomationSettings()
 }
 
@@ -40,6 +46,40 @@ enum FocusApplyPolicy {
         var shortcutStepError: String?
         var showShortcutMissingError: Bool
         var ignore: Bool
+    }
+
+    struct ProofOutcome {
+        var shortcutsProven: Bool
+        var automationDenied: Bool
+        var shortcutStepError: String?
+    }
+
+    /// Both runs have to succeed. The first denial or failure stops the proof
+    /// so a second shortcut doesn't run before the user has answered.
+    static func mapProof(results: [Result<Void, ShortcutRunError>]) -> ProofOutcome {
+        guard !results.isEmpty else {
+            return ProofOutcome(shortcutsProven: false, automationDenied: false, shortcutStepError: nil)
+        }
+        for result in results {
+            switch result {
+            case .success:
+                continue
+            case .failure(let error):
+                if case .automationDenied = error {
+                    return ProofOutcome(
+                        shortcutsProven: false,
+                        automationDenied: true,
+                        shortcutStepError: nil
+                    )
+                }
+                return ProofOutcome(
+                    shortcutsProven: false,
+                    automationDenied: false,
+                    shortcutStepError: error.localizedDescription
+                )
+            }
+        }
+        return ProofOutcome(shortcutsProven: true, automationDenied: false, shortcutStepError: nil)
     }
 
     static func shouldDrop(automationDenied: Bool, onExists: Bool, offExists: Bool) -> Bool {
@@ -131,6 +171,8 @@ final class ShortcutsFocusApply: FocusApply {
     var offExists = false
     var automationDenied = false
     var probedAutomation = false
+    var shortcutsProven = false
+    var provingShortcuts = false
     var applyDropped = false
     var shortcutStepError: String?
     var showShortcutMissingError = false
@@ -143,6 +185,9 @@ final class ShortcutsFocusApply: FocusApply {
     private let observer = FocusStatusObserver()
     private var probeGeneration = 0
     private var automationPromptPending = false
+    private var proofAttempted = false
+    private var proofAwaitingPrompt = false
+    private var suppressLocalChange = false
 
     init() {
         observer.onChange = { [weak self] enabled, text in
@@ -224,8 +269,67 @@ final class ShortcutsFocusApply: FocusApply {
         probedAutomation = true
         onExists = true
         offExists = true
+        shortcutsProven = true
+        provingShortcuts = false
+        proofAttempted = true
         automationDenied = false
         publish()
+    }
+
+    /// Runs On, then Off. `exists` does not raise the Automation prompt;
+    /// `run` does, so setup calls this once both shortcuts are in Shortcuts.
+    /// Focus ends off.
+    func proveShortcuts() {
+        guard onExists, offExists else { return }
+        guard !shortcutsProven, !provingShortcuts, !proofAttempted else { return }
+        proofAttempted = true
+        provingShortcuts = true
+        automationDenied = false
+        shortcutStepError = nil
+        publish()
+        suppressLocalChange = true
+        Task {
+            let onResult = await Self.runDetached(named: ShortcutNames.on)
+            let results: [Result<Void, ShortcutRunError>]
+            if case .failure = onResult {
+                results = [onResult]
+            } else {
+                let offResult = await Self.runDetached(named: ShortcutNames.off)
+                results = [onResult, offResult]
+            }
+            suppressLocalChange = false
+            let outcome = FocusApplyPolicy.mapProof(results: results)
+            provingShortcuts = false
+            // A background Apple Event often returns "not permitted" while the
+            // system dialog is still up. Wait until the app is active again,
+            // then run once more so Allow is the answer we keep.
+            if outcome.automationDenied && !proofAwaitingPrompt {
+                proofAwaitingPrompt = true
+                proofAttempted = true
+                lastRunText = "Last run: waiting for Shortcuts access"
+                publish()
+                return
+            }
+            proofAwaitingPrompt = false
+            shortcutsProven = outcome.shortcutsProven
+            automationDenied = outcome.automationDenied
+            shortcutStepError = outcome.shortcutStepError
+            probedAutomation = true
+            if outcome.shortcutsProven {
+                lastRunText = "Last run: shortcuts verified"
+            } else if outcome.automationDenied {
+                lastRunText = "Last run: \(ShortcutRunError.automationDenied.localizedDescription)"
+            } else {
+                lastRunText = "Last run: \(outcome.shortcutStepError ?? "failed")"
+            }
+            publish()
+        }
+    }
+
+    func prepareShortcutProofRetry() {
+        guard !provingShortcuts, !shortcutsProven else { return }
+        proofAttempted = false
+        proofAwaitingPrompt = false
     }
 
     func openAutomationSettings() {
@@ -240,10 +344,20 @@ final class ShortcutsFocusApply: FocusApply {
         }
     }
 
+    func markShortcutsProven() {
+        shortcutsProven = true
+        proofAttempted = true
+    }
+
     func noteBecameActive() {
         if automationPromptPending {
             automationPromptPending = false
             probeGeneration += 1
+        }
+        if proofAwaitingPrompt {
+            proofAwaitingPrompt = false
+            proofAttempted = false
+            proveShortcuts()
         }
     }
 
@@ -251,7 +365,9 @@ final class ShortcutsFocusApply: FocusApply {
         focusStatusText = text
         focusOn = enabled
         publish()
-        onLocalChange?(enabled, text)
+        if !suppressLocalChange {
+            onLocalChange?(enabled, text)
+        }
     }
 
     private func importShortcut(named name: String) {
@@ -271,13 +387,17 @@ final class ShortcutsFocusApply: FocusApply {
         publish()
     }
 
+    private static func runDetached(named name: String) async -> Result<Void, ShortcutRunError> {
+        await Task.detached {
+            ShortcutRunner.run(named: name)
+        }.value
+    }
+
     private func runShortcut(named name: String) {
         lastRunText = "Last run: running \(name)…"
         publish()
         Task {
-            let result = await Task.detached {
-                ShortcutRunner.run(named: name)
-            }.value
+            let result = await Self.runDetached(named: name)
             switch result {
             case .success:
                 lastRunText = "Last run: \(name) succeeded"

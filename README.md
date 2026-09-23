@@ -41,7 +41,8 @@ Pair both devices, then flip Focus. That's it!
 1. Open the `.dmg`, drag **Focus Sync** onto **Applications**, and launch
    it.
 2. Click the menu-bar icon (no Dock icon) and finish the wizard: allow
-   Shortcuts, add the On and Off shortcuts, then optionally **Open at
+   notifications, add the On and Off shortcuts (the app runs them so
+   macOS can ask to control Shortcuts), then optionally **Open at
    login**.
 3. Leave the window open on the QR code.
 

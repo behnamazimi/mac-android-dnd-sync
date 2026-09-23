@@ -173,11 +173,13 @@ Each is a single **Set Focus** action for system **Do Not Disturb**. To
 recreate them, build matching actions in Shortcuts.app with those exact
 names, export the `.shortcut` files into that folder, and rebuild.
 
-Wizard order: **Allow Shortcuts and Notifications** (both prompts; the
-rest of the wizard waits until notifications are allowed) → **Add the On
-shortcut** → **Add the Off shortcut** → **Open at login** (skippable: a
-fully quit Mac can't apply Focus from the phone) → **Scan this from the
-phone** (Copy pairing code if the camera can't read the QR). Neither app is
+Wizard order: **Allow notifications** (the rest of the wizard waits until
+notifications are allowed) → **Add the On shortcut** → **Add the Off
+shortcut** (once both are in Shortcuts, the app runs them so macOS can
+ask to let Focus Sync control Shortcuts; Focus turns on, then off) →
+**Open at login** (skippable: a fully quit Mac can't apply Focus from the
+phone) → **Scan this from the phone** (Copy pairing code if the camera
+can't read the QR). Neither app is
 on a store yet, so the QR step's own hint (with an inline **Download the
 Android app** link) and Settings → **About** both point at the GitHub
 Release page if Android isn't installed. After pairing, status shows

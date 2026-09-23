@@ -21,17 +21,42 @@ struct ShortcutsStepView: View {
             } header: {
                 Text(ProductCopy.shortcutsTitle)
             } footer: {
-                Text(model.shortcutStepError ?? ProductCopy.shortcutsBody)
-                    .foregroundStyle(model.shortcutStepError != nil ? .red : .secondary)
+                Text(footer)
+                    .foregroundStyle(footerIsError ? .red : .secondary)
             }
             Section {
                 HStack {
-                    Button(ProductCopy.checkAgain, action: { model.probeShortcuts() })
+                    Button(retryTitle, action: model.recheckShortcuts)
+                        .disabled(model.provingShortcuts)
                     Spacer()
+                    if model.automationDenied {
+                        Button(ProductCopy.openAutomation, action: model.openAutomationSettings)
+                            .buttonStyle(.borderedProminent)
+                    }
                 }
             }
         }
         .formStyle(.grouped)
+    }
+
+    private var footer: String {
+        if model.automationDenied { return ProductCopy.automationDenied }
+        if let error = model.shortcutStepError, !error.isEmpty { return error }
+        if model.onExists && model.offExists && !model.shortcutsProven {
+            return ProductCopy.shortcutsProveBody
+        }
+        return ProductCopy.shortcutsBody
+    }
+
+    private var footerIsError: Bool {
+        model.automationDenied || (model.shortcutStepError?.isEmpty == false)
+    }
+
+    private var retryTitle: String {
+        if model.onExists && model.offExists && !model.shortcutsProven {
+            return ProductCopy.tryAgain
+        }
+        return ProductCopy.checkAgain
     }
 }
 

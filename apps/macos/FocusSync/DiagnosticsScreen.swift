@@ -15,6 +15,7 @@ struct DiagnosticsScreen: View {
             "Automation denied: \(model.automationDenied ? "yes" : "no")",
             "On shortcut: \(model.onExists ? "yes" : "no")",
             "Off shortcut: \(model.offExists ? "yes" : "no")",
+            "Shortcuts proven: \(model.shortcutsProven ? "yes" : "no")",
             "Login item: \(model.loginItemEnabled ? "enabled" : "off")",
             LocalCommandServer.diagnosticsCurlHint,
             "LAN advertising: \(model.lanAdvertising ? "yes" : "no")",

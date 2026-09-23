@@ -14,6 +14,8 @@ final class InMemoryFocusApply: FocusApply {
     var offExists = false
     var automationDenied = false
     var probedAutomation = false
+    var shortcutsProven = false
+    var provingShortcuts = false
     var applyDropped = false
     var shortcutStepError: String?
     var showShortcutMissingError = false
@@ -108,10 +110,24 @@ final class InMemoryFocusApply: FocusApply {
         probe(showMissing: false)
     }
 
+    func proveShortcuts() {
+        guard onExists, offExists, !shortcutsProven, !provingShortcuts else { return }
+        shortcutsProven = true
+        automationDenied = false
+        probedAutomation = true
+        onStateChange?()
+    }
+
+    func prepareShortcutProofRetry() {
+        guard !provingShortcuts, !shortcutsProven else { return }
+    }
+
     func assumeShortcutsPresent() {
         probedAutomation = true
         onExists = true
         offExists = true
+        shortcutsProven = true
+        provingShortcuts = false
         automationDenied = false
         onStateChange?()
     }

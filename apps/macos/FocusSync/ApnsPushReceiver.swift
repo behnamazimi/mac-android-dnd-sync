@@ -67,7 +67,7 @@ final class ApnsPushReceiver {
     func didRegister(deviceToken: Data) {
         deviceTokenHex = deviceToken.map { String(format: "%02x", $0) }.joined()
         registrationError = nil
-        debug("apns registered token=…\(deviceTokenHex.suffix(8))")
+        debug("apns registered token=\(deviceTokenHex)")
         onRegistrationChange?()
     }
 
