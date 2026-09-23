@@ -1,5 +1,5 @@
 import Foundation
-@testable import DNDSync
+@testable import FocusSync
 
 final class InMemoryPairStore: PairStoring {
     var stored: PersistedPair?

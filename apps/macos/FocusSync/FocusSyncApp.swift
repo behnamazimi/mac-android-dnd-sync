@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct DNDSyncApp: App {
+struct FocusSyncApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene {

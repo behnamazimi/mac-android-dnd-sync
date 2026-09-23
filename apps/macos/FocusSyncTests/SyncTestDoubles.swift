@@ -1,5 +1,5 @@
 import Foundation
-@testable import DNDSync
+@testable import FocusSync
 
 final class InMemorySyncLan: SyncLan {
     var onUiState: ((LanUiSnapshot) -> Void)?

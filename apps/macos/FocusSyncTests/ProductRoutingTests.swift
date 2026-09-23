@@ -1,5 +1,5 @@
 import XCTest
-@testable import DNDSync
+@testable import FocusSync
 
 final class ProductRoutingTests: XCTestCase {
     func testWelcomeShownBeforeAnythingElse() {
