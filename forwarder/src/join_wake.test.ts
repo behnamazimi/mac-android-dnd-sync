@@ -1,20 +1,46 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { alertPushBody, apnsHosts, hostsForPush, isWrongApnsEnvironment } from "./apns.js";
+import {
+  alertApnsHeaders,
+  alertPushBody,
+  APNS_EXPIRATION_SECONDS,
+  apnsHosts,
+  hostsForPush,
+  isWrongApnsEnvironment,
+} from "./apns.js";
 import { wakeMacOnJoin } from "./join_wake.js";
 
 test("joined push has no envelope and no on/off bit", () => {
   const body = JSON.parse(alertPushBody({ joined: true })) as {
-    aps: { alert?: { title?: string }; "content-available"?: number };
+    aps: {
+      alert?: { title?: string };
+      "content-available"?: number;
+      "interruption-level"?: string;
+      "relevance-score"?: number;
+    };
     joined?: boolean;
     envelope_b64?: string;
     command?: string;
   };
   assert.equal(body.aps.alert?.title, "Do Not Disturb Sync");
   assert.equal(body.aps["content-available"], undefined);
+  assert.equal(body.aps["interruption-level"], "time-sensitive");
+  assert.equal(body.aps["relevance-score"], 1);
   assert.equal(body.joined, true);
   assert.equal(body.envelope_b64, undefined);
   assert.equal(body.command, undefined);
+});
+
+test("alert push is immediate and expires in one minute", () => {
+  const nowMs = 1_700_000_000_000;
+  const headers = alertApnsHeaders(nowMs);
+  assert.equal(headers["apns-push-type"], "alert");
+  assert.equal(headers["apns-priority"], "10");
+  assert.equal(
+    headers["apns-expiration"],
+    String(Math.floor(nowMs / 1000) + APNS_EXPIRATION_SECONDS),
+  );
+  assert.equal(APNS_EXPIRATION_SECONDS, 60);
 });
 
 test("wake calls the Mac APNs token", async () => {

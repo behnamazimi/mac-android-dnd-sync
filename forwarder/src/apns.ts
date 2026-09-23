@@ -95,10 +95,28 @@ function makeJwt(): string {
 
 const COLLAPSE_ID = "dndsync";
 
+/** Apple may retry for this long. A Focus flip older than a minute is stale. */
+export const APNS_EXPIRATION_SECONDS = 60;
+
+export function apnsExpiration(nowMs = Date.now()): string {
+  return String(Math.floor(nowMs / 1000) + APNS_EXPIRATION_SECONDS);
+}
+
+export function alertApnsHeaders(nowMs = Date.now()): Record<string, string> {
+  return {
+    "apns-push-type": "alert",
+    "apns-priority": "10",
+    "apns-expiration": apnsExpiration(nowMs),
+    "apns-collapse-id": COLLAPSE_ID,
+  };
+}
+
 export function alertPushBody(fields: Record<string, unknown>): string {
   return JSON.stringify({
     aps: {
       alert: { title: "Do Not Disturb Sync" },
+      "interruption-level": "time-sensitive",
+      "relevance-score": 1,
     },
     ...fields,
   });
@@ -191,9 +209,7 @@ async function postOnce(
         ":path": `/3/device/${token}`,
         authorization: `bearer ${jwt}`,
         "apns-topic": TOPIC,
-        "apns-push-type": "alert",
-        "apns-priority": "10",
-        "apns-collapse-id": COLLAPSE_ID,
+        ...alertApnsHeaders(),
         "content-type": "application/json",
       });
       let status = "";

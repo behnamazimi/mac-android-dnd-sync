@@ -35,8 +35,15 @@ const signature = sign("SHA256", Buffer.from(signingInput), {
 });
 const jwt = `${signingInput}.${base64url(signature)}`;
 
+// Same window as forwarder/src/apns.ts. A UNIX time, not a duration.
+const APNS_EXPIRATION_SECONDS = 60;
+
 const body = JSON.stringify({
-  aps: { alert: { title: "Do Not Disturb Sync" } },
+  aps: {
+    alert: { title: "Do Not Disturb Sync" },
+    "interruption-level": "time-sensitive",
+    "relevance-score": 1,
+  },
   command,
 });
 
@@ -79,6 +86,9 @@ function sendPush(client, { token, jwt, body }) {
       "apns-topic": "com.dndsync.macos",
       "apns-push-type": "alert",
       "apns-priority": "10",
+      "apns-expiration": String(
+        Math.floor(Date.now() / 1000) + APNS_EXPIRATION_SECONDS,
+      ),
       "content-type": "application/json",
     });
 
