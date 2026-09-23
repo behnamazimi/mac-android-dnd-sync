@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Writes or verifies apps/macos/DNDSync/ForwarderSecrets.local.swift so a
+# Writes or verifies apps/macos/FocusSync/ForwarderSecrets.local.swift so a
 # Release archive can call POST /v1/pairs. The gitignored file is empty in
 # CI (Xcode copies the example), and the QR step then only says "Couldn't
 # start pairing. Check the internet." Never prints secret values.
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-file="$root/apps/macos/DNDSync/ForwarderSecrets.local.swift"
+file="$root/apps/macos/FocusSync/ForwarderSecrets.local.swift"
 example="$file.example"
 
 write_from_env() {

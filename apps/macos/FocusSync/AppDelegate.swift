@@ -9,14 +9,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         // `.regular` as soon as it shows the main window (and back to
         // `.accessory` once every window is closed). The status item it
         // installs is the one thing that's always present.
-        NSApp.setActivationPolicy(.accessory)
         UNUserNotificationCenter.current().delegate = self
-        // Remote registration waits until notification permission is granted.
-        // Registering first files the topic as non-waking, and later pushes
-        // are dropped.
         ApnsPushReceiver.debug("apns listener ready")
-        ApnsPushReceiver.reregisterIfAuthorized()
+        // The probe never leaves the regular activation policy. Registering
+        // while this process is an accessory agent is what makes macOS drop
+        // later alerts for this app. Show the window first (that sets
+        // .regular), then register on the next turn, after that policy lands.
         chrome = ProductChrome()
+        Task { @MainActor in
+            await ApnsPushReceiver.requestPermissionAndRegister()
+            await chrome?.model.refreshNotificationAuthorization()
+        }
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
@@ -61,7 +64,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         didReceiveRemoteNotification userInfo: [String: Any]
     ) {
         ApnsPushReceiver.debug("apns system callback")
-        ApnsPushReceiver.shared.didReceive(userInfo: userInfo)
+        ApnsPushReceiver.shared.didReceive(userInfo: userInfo, source: "didReceiveRemoteNotification")
     }
 
     func userNotificationCenter(
@@ -69,8 +72,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         willPresent notification: UNNotification,
         withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
     ) {
-        ApnsPushReceiver.shared.didReceive(userInfo: dictionary(from: notification.request.content.userInfo))
-        completionHandler([])
+        let payload = dictionary(from: notification.request.content.userInfo)
+        ApnsPushReceiver.shared.didReceive(userInfo: payload, source: "willPresent")
+        completionHandler([.banner, .sound, .list])
     }
 
     func userNotificationCenter(
@@ -84,7 +88,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                 chrome?.showMainWindow()
             }
         }
-        ApnsPushReceiver.shared.didReceive(userInfo: dictionary(from: response.notification.request.content.userInfo))
+        let payload = dictionary(from: response.notification.request.content.userInfo)
+        ApnsPushReceiver.shared.didReceive(userInfo: payload, source: "didReceiveResponse")
         completionHandler()
     }
 

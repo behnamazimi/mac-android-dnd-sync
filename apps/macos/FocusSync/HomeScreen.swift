@@ -76,6 +76,11 @@ struct HomeScreen: View {
                     Label(LastSyncPresentation.peerLabel(model.peerDeviceName), systemImage: "iphone")
                 }
             }
+            if model.notificationsDenied {
+                Section {
+                    Button(ProductCopy.openNotifications, action: model.openNotificationSettings)
+                }
+            }
             Section(ProductCopy.recentActivity) {
                 if model.recentActivity.isEmpty {
                     Text(ProductCopy.neverSynced)

@@ -66,7 +66,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		AA0000000000000000000010 /* DNDSync.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DNDSync.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA0000000000000000000010 /* Focus Sync.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Focus Sync.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA0000000000000000000011 /* DNDSyncApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DNDSyncApp.swift; sourceTree = "<group>"; };
 		AA0000000000000000000146 /* ProductRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductRootView.swift; sourceTree = "<group>"; };
 		AA0000000000000000000148 /* WelcomeStepView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeStepView.swift; sourceTree = "<group>"; };
@@ -197,13 +197,13 @@
 				AA0000000000000000000210 /* DNDSync-Release.entitlements */,
 				AA0000000000000000000300 /* Signing.xcconfig */,
 			);
-			path = DNDSync;
+			path = FocusSync;
 			sourceTree = "<group>";
 		};
 		AA0000000000000000000032 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				AA0000000000000000000010 /* DNDSync.app */,
+				AA0000000000000000000010 /* Focus Sync.app */,
 				AA00000000000000000000D1 /* DNDSyncTests.xctest */,
 			);
 			name = Products;
@@ -245,7 +245,7 @@
 				AA00000000000000000000B9 /* dnd_state_v1.binpb */,
 				AA00000000000000000000BB /* cloud_envelope_v1.binpb */,
 			);
-			path = DNDSyncTests;
+			path = FocusSyncTests;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -270,7 +270,7 @@
 				AA00000000000000000000A1 /* SwiftProtobuf */,
 			);
 			productName = DNDSync;
-			productReference = AA0000000000000000000010 /* DNDSync.app */;
+			productReference = AA0000000000000000000010 /* Focus Sync.app */;
 			productType = "com.apple.product-type.application";
 		};
 		AA00000000000000000000D0 /* DNDSyncTests */ = {
@@ -374,17 +374,17 @@
 			inputFileListPaths = (
 			);
 			inputPaths = (
-				"$(SRCROOT)/DNDSync/ForwarderSecrets.local.swift.example",
+				"$(SRCROOT)/FocusSync/ForwarderSecrets.local.swift.example",
 			);
 			name = "Copy Forwarder Secrets";
 			outputFileListPaths = (
 			);
 			outputPaths = (
-				"$(SRCROOT)/DNDSync/ForwarderSecrets.local.swift",
+				"$(SRCROOT)/FocusSync/ForwarderSecrets.local.swift",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "LOCAL=\"${SRCROOT}/DNDSync/ForwarderSecrets.local.swift\"\nEXAMPLE=\"${SRCROOT}/DNDSync/ForwarderSecrets.local.swift.example\"\nif [ ! -f \"$LOCAL\" ]; then\n  cp \"$EXAMPLE\" \"$LOCAL\"\nfi\n";
+			shellScript = "LOCAL=\"${SRCROOT}/FocusSync/ForwarderSecrets.local.swift\"\nEXAMPLE=\"${SRCROOT}/FocusSync/ForwarderSecrets.local.swift.example\"\nif [ ! -f \"$LOCAL\" ]; then\n  cp \"$EXAMPLE\" \"$LOCAL\"\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -535,17 +535,17 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = DNDSync/DNDSync.entitlements;
+				CODE_SIGN_ENTITLEMENTS = FocusSync/DNDSync.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 8;
 				DEVELOPMENT_TEAM = MVSF9NZ97S;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = DNDSync/Info.plist;
+				INFOPLIST_FILE = FocusSync/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Focus Sync";
+				INFOPLIST_KEY_CFBundleName = "Focus Sync";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
-				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSAppleEventsUsageDescription = "Focus Sync uses Shortcuts to turn Focus on and off.";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -554,8 +554,8 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 0.5.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.dndsync.macos;
-				PRODUCT_NAME = DNDSync;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dndsyncapp.macos;
+				PRODUCT_NAME = "Focus Sync";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 			};
@@ -566,16 +566,16 @@
 			baseConfigurationReference = AA0000000000000000000300 /* Signing.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = "DNDSync/DNDSync-Release.entitlements";
+				CODE_SIGN_ENTITLEMENTS = "FocusSync/DNDSync-Release.entitlements";
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 8;
 				DEVELOPMENT_TEAM = MVSF9NZ97S;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = DNDSync/Info.plist;
+				INFOPLIST_FILE = FocusSync/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Focus Sync";
+				INFOPLIST_KEY_CFBundleName = "Focus Sync";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
-				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSAppleEventsUsageDescription = "Focus Sync uses Shortcuts to turn Focus on and off.";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -584,8 +584,8 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 0.5.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.dndsync.macos;
-				PRODUCT_NAME = DNDSync;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dndsyncapp.macos;
+				PRODUCT_NAME = "Focus Sync";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 			};
@@ -601,11 +601,11 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 0.5.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.dndsync.macosTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dndsyncapp.macosTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/DNDSync.app/Contents/MacOS/DNDSync";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Focus Sync.app/Contents/MacOS/Focus Sync";
 			};
 			name = Debug;
 		};
@@ -619,11 +619,11 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 0.5.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.dndsync.macosTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dndsyncapp.macosTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/DNDSync.app/Contents/MacOS/DNDSync";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Focus Sync.app/Contents/MacOS/Focus Sync";
 			};
 			name = Release;
 		};

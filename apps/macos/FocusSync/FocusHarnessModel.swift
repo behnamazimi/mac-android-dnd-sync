@@ -202,10 +202,9 @@ final class FocusHarnessModel {
                 self?.handleRemoteCommand(command)
             }
         }
-        apns.onReceive = { [weak self] userInfo in
+        apns.onReceive = { [weak self] source, _ in
             Task { @MainActor in
-                let kind = userInfo["envelope_b64"] != nil ? "envelope" : "received"
-                self?.lastApnsText = "Last APNs: \(kind)"
+                self?.lastApnsText = "Last APNs: \(source)"
             }
         }
         apns.onJoinedWake = { [weak self] in
@@ -289,14 +288,6 @@ final class FocusHarnessModel {
 
     func turnOff() {
         focusApply.turnOff()
-    }
-
-    func copyApnsToken() {
-        guard !apnsTokenHex.isEmpty else {
-            return
-        }
-        NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(apnsTokenHex, forType: .string)
     }
 
     func copyPairPayload() {
@@ -533,7 +524,7 @@ final class FocusHarnessModel {
         notificationsGranted = settings.authorizationStatus == .authorized
         notificationsDenied = settings.authorizationStatus == .denied
         if notificationsGranted {
-            NSApplication.shared.registerForRemoteNotifications()
+            ApnsPushReceiver.reregisterIfAuthorized()
         }
         refreshOffline()
     }

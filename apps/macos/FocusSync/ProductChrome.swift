@@ -325,7 +325,7 @@ final class ProductChrome: NSObject, NSWindowDelegate {
     /// Dock icon / Cmd+Tab entry tracks window visibility: present while any
     /// window is open, hidden once everything is closed (the status item
     /// stays put regardless, as the stable way back in).
-    private func updateActivationPolicy() {
+    func updateActivationPolicy() {
         NSApp.setActivationPolicy(windowsVisible() ? .regular : .accessory)
     }
 

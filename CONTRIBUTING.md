@@ -55,9 +55,9 @@ need their own store-listing/review work on top of this.
    `ANDROID_KEY_ALIAS`, `FORWARDER_APP_KEY`,
    `ANDROID_GOOGLE_SERVICES_JSON_BASE64`). Push Notifications on the Mac
    app means CI also needs a **Developer ID** provisioning profile for
-   `com.dndsync.macos` (Apple Developer → Profiles → Developer ID). Encode
+   `com.dndsyncapp.macos` (Apple Developer → Profiles → Developer ID). Encode
    it with `base64 -i Profile.provisionprofile | pbcopy`. CI writes that
-   profile name into `apps/macos/DNDSync/CI-signing.xcconfig` (included
+   profile name into `apps/macos/FocusSync/CI-signing.xcconfig` (included
    only by the DNDSync Release target) rather than an `xcodebuild`
    override, so SwiftProtobuf is not asked to use a provisioning profile
    it doesn't support. The same name is injected into a copy of

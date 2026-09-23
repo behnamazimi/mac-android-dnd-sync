@@ -12,7 +12,7 @@ final class ApnsPushReceiver {
 
     var onCommand: ((String) -> Void)?
     var onRegistrationChange: (() -> Void)?
-    var onReceive: (([String: Any]) -> Void)?
+    var onReceive: ((String, [String: Any]) -> Void)?
     var onEnvelope: ((Dndsync_V1_CloudEnvelope) -> Void)?
     var onEnvelopeError: ((String) -> Void)?
     /// Silent join poke. No Focus bit. The Mac asks for the phone's key once.
@@ -20,18 +20,48 @@ final class ApnsPushReceiver {
 
     private init() {}
 
-    /// Launch registers before the user allows notifications, so macOS files
-    /// the topic as non-waking and later drops pushes as an unknown token.
-    /// Call again once notification permission is granted, and whenever the
-    /// app becomes active, so this process is the connected client for the token.
+    /// Same order as the APNs probe: a regular app, permission, then register.
+    /// The probe never sets an accessory policy. Registering this process
+    /// while it is an accessory agent files the topic as non-waking.
+    static func requestPermissionAndRegister() async {
+        guard NSApp.activationPolicy() == .regular else {
+            debug("apns skip register while accessory")
+            return
+        }
+        let center = UNUserNotificationCenter.current()
+        let settings = await center.notificationSettings()
+        debug("apns notification auth=\(settings.authorizationStatus.rawValue)")
+        switch settings.authorizationStatus {
+        case .notDetermined:
+            let granted = (try? await center.requestAuthorization(options: [.alert, .sound, .badge])) ?? false
+            guard granted else { return }
+            registerIfRegular()
+        case .authorized, .provisional:
+            registerIfRegular()
+        case .denied:
+            break
+        @unknown default:
+            break
+        }
+    }
+
     static func reregisterIfAuthorized() {
         Task { @MainActor in
             let settings = await UNUserNotificationCenter.current().notificationSettings()
-            debug("apns notification auth=\(settings.authorizationStatus.rawValue)")
-            guard settings.authorizationStatus == .authorized else { return }
-            NSApplication.shared.registerForRemoteNotifications()
-            debug("apns reregister")
+            guard settings.authorizationStatus == .authorized
+                || settings.authorizationStatus == .provisional
+            else { return }
+            registerIfRegular()
         }
+    }
+
+    private static func registerIfRegular() {
+        guard NSApp.activationPolicy() == .regular else {
+            debug("apns skip register while accessory")
+            return
+        }
+        NSApplication.shared.registerForRemoteNotifications()
+        debug("apns register")
     }
 
     func didRegister(deviceToken: Data) {
@@ -46,9 +76,8 @@ final class ApnsPushReceiver {
         onRegistrationChange?()
     }
 
-    func didReceive(userInfo: [String: Any]) {
-        withdrawSyncNotification()
-        onReceive?(userInfo)
+    func didReceive(userInfo: [String: Any], source: String) {
+        onReceive?(source, userInfo)
         let hasEnvelope = userInfo["envelope_b64"] != nil
         let joined = isJoinedWake(userInfo["joined"])
         let command = userInfo["command"] as? String
@@ -88,22 +117,6 @@ final class ApnsPushReceiver {
             return number.boolValue
         }
         return false
-    }
-
-    private func withdrawSyncNotification() {
-        let center = UNUserNotificationCenter.current()
-        center.getDeliveredNotifications { notifications in
-            let ids = notifications.compactMap { note -> String? in
-                let info = note.request.content.userInfo
-                if info["envelope_b64"] != nil || info["joined"] != nil || info["command"] != nil {
-                    return note.request.identifier
-                }
-                return nil
-            }
-            if !ids.isEmpty {
-                center.removeDeliveredNotifications(withIdentifiers: ids)
-            }
-        }
     }
 
     static func debug(_ message: String) {

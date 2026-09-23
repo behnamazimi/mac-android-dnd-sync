@@ -97,7 +97,7 @@ help:
 		'  notarize-mac                Submit to Apple + wait + staple (needs one-time' \
 		'                               xcrun notarytool store-credentials $(NOTARY_PROFILE))' \
 		'  dmg-mac                     archive → export → notarize → build/mac/*.dmg' \
-		'  package-mac-dmg             Re-pack build/mac/export/DNDSync.app (no notarize)' \
+		'  package-mac-dmg             Re-pack build/mac/export/Focus Sync.app (no notarize)' \
 		'  ship-mac                    Alias for dmg-mac' \
 		'  android-keystore            Generate apps/android/release.keystore.jks (once)' \
 		'  build-android-release       android-keystore + assembleRelease (signed APK)' \
@@ -128,12 +128,12 @@ doctor:
 	for f in apps/android/app/google-services.json \
 		scripts/fcm-send/firebase-service-account.json \
 		$(P8) \
-		apps/macos/DNDSync/ForwarderSecrets.local.swift; do \
+		apps/macos/FocusSync/ForwarderSecrets.local.swift; do \
 		if [ -f "$$f" ]; then printf '[ok]   %s present\n' "$$f"; \
 		else printf '[--]   %s missing (see README Set up)\n' "$$f"; warn=1; fi; \
 	done; \
-	if [ -f apps/macos/DNDSync/ForwarderSecrets.local.swift ]; then \
-		empties="$$(grep -c '= ""' apps/macos/DNDSync/ForwarderSecrets.local.swift || true)"; \
+	if [ -f apps/macos/FocusSync/ForwarderSecrets.local.swift ]; then \
+		empties="$$(grep -c '= ""' apps/macos/FocusSync/ForwarderSecrets.local.swift || true)"; \
 		if [ "$$empties" -gt 0 ]; then printf '[warn] ForwarderSecrets.local.swift has %s empty field(s) — it compiles, but Mac cloud path stays disabled\n' "$$empties"; warn=1; fi; \
 	fi; \
 	printf '\nShip readiness (only needed for make dmg-mac / build-android-release — never blocks doctor):\n'; \
@@ -184,10 +184,10 @@ secrets-print:
 	printf 'make secrets-apns-p8 && make deploy\n'
 
 secrets-local-mac:
-	@test -f apps/macos/DNDSync/ForwarderSecrets.local.swift || \
-		cp apps/macos/DNDSync/ForwarderSecrets.local.swift.example \
-			apps/macos/DNDSync/ForwarderSecrets.local.swift
-	@printf 'Edit apps/macos/DNDSync/ForwarderSecrets.local.swift\n'
+	@test -f apps/macos/FocusSync/ForwarderSecrets.local.swift || \
+		cp apps/macos/FocusSync/ForwarderSecrets.local.swift.example \
+			apps/macos/FocusSync/ForwarderSecrets.local.swift
+	@printf 'Edit apps/macos/FocusSync/ForwarderSecrets.local.swift\n'
 
 # Release archives must be able to POST /v1/pairs. CI has no gitignored
 # ForwarderSecrets.local.swift, so Xcode would copy the empty example and
@@ -222,7 +222,7 @@ secrets-set:
 # BSR remote plugins and makes hitting their rate limit more likely
 # (https://buf.build/docs/bsr/rate-limits/) — see README Generate.
 build-mac:
-	xcodebuild -project apps/macos/DNDSync.xcodeproj -scheme DNDSync \
+	xcodebuild -project apps/macos/FocusSync.xcodeproj -scheme DNDSync \
 		-configuration Debug -destination 'platform=macOS' build
 
 build-android:
@@ -233,7 +233,7 @@ build-android:
 test: test-mac test-android test-forwarder
 
 test-mac:
-	xcodebuild -project apps/macos/DNDSync.xcodeproj -scheme DNDSync \
+	xcodebuild -project apps/macos/FocusSync.xcodeproj -scheme DNDSync \
 		-configuration Debug -destination 'platform=macOS' test
 
 test-android:
@@ -340,9 +340,9 @@ archive-mac: secrets-release-mac
 			printf 'CODE_SIGN_IDENTITY = Developer ID Application\n'; \
 			printf 'DEVELOPMENT_TEAM = %s\n' "$(MAC_TEAM_ID)"; \
 			printf 'PROVISIONING_PROFILE_SPECIFIER = %s\n' "$$MACOS_PROFILE_SPECIFIER"; \
-		} > apps/macos/DNDSync/CI-signing.xcconfig; \
+		} > apps/macos/FocusSync/CI-signing.xcconfig; \
 	fi
-	xcodebuild -project apps/macos/DNDSync.xcodeproj -scheme DNDSync \
+	xcodebuild -project apps/macos/FocusSync.xcodeproj -scheme DNDSync \
 		-configuration Release -destination 'generic/platform=macOS' \
 		-archivePath $(MAC_ARCHIVE) archive
 
@@ -361,18 +361,18 @@ export-mac: archive-mac
 		plist="$(MAC_BUILD_DIR)/ExportOptions.plist"; \
 		cp "$(EXPORT_OPTIONS_PLIST)" "$$plist"; \
 		/usr/libexec/PlistBuddy -c 'Add :provisioningProfiles dict' "$$plist"; \
-		/usr/libexec/PlistBuddy -c "Add :provisioningProfiles:com.dndsync.macos string $$MACOS_PROFILE_SPECIFIER" "$$plist"; \
+		/usr/libexec/PlistBuddy -c "Add :provisioningProfiles:com.dndsyncapp.macos string $$MACOS_PROFILE_SPECIFIER" "$$plist"; \
 	fi; \
 	xcodebuild -exportArchive -archivePath $(MAC_ARCHIVE) \
 		-exportPath $(MAC_EXPORT) \
 		-exportOptionsPlist "$$plist"
-	@if ! strings "$(MAC_EXPORT)/DNDSync.app/Contents/MacOS/DNDSync" | grep -Fq "$(FUNCTION_URL)"; then \
+	@if ! strings "$(MAC_EXPORT)/Focus Sync.app/Contents/MacOS/Focus Sync" | grep -Fq "$(FUNCTION_URL)"; then \
 		printf 'Exported app is missing the forwarder URL — pairing cannot start.\n' >&2; \
 		exit 1; \
 	fi
 
 notarize-mac: export-mac
-	@ditto -c -k --keepParent "$(MAC_EXPORT)/DNDSync.app" "$(MAC_BUILD_DIR)/DNDSync-notarize.zip"
+	@ditto -c -k --keepParent "$(MAC_EXPORT)/Focus Sync.app" "$(MAC_BUILD_DIR)/DNDSync-notarize.zip"
 	@if [ -n "$${NOTARY_APPLE_ID:-}" ] && [ -n "$${NOTARY_TEAM_ID:-}" ] && [ -n "$${NOTARY_PASSWORD:-}" ]; then \
 		echo "Notarizing with explicit credentials (CI path — no keychain profile available)"; \
 		xcrun notarytool submit "$(MAC_BUILD_DIR)/DNDSync-notarize.zip" \
@@ -381,19 +381,19 @@ notarize-mac: export-mac
 		xcrun notarytool submit "$(MAC_BUILD_DIR)/DNDSync-notarize.zip" \
 			--keychain-profile "$(NOTARY_PROFILE)" --wait; \
 	fi
-	xcrun stapler staple "$(MAC_EXPORT)/DNDSync.app"
+	xcrun stapler staple "$(MAC_EXPORT)/Focus Sync.app"
 	@rm -f "$(MAC_BUILD_DIR)/DNDSync-notarize.zip"
 
 package-mac-dmg:
-	@test -d "$(MAC_EXPORT)/DNDSync.app" || { \
+	@test -d "$(MAC_EXPORT)/Focus Sync.app" || { \
 		printf 'Missing %s. Run make export-mac (or make dmg-mac) first.\n' \
-			"$(MAC_EXPORT)/DNDSync.app" >&2; \
+			"$(MAC_EXPORT)/Focus Sync.app" >&2; \
 		exit 1; \
 	}
 	@version="$$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' \
-		"$(MAC_EXPORT)/DNDSync.app/Contents/Info.plist")"; \
+		"$(MAC_EXPORT)/Focus Sync.app/Contents/Info.plist")"; \
 	name="Focus-Sync-$$version.dmg"; \
-	./scripts/package-mac-dmg.sh "$(MAC_EXPORT)/DNDSync.app" "$(MAC_BUILD_DIR)/$$name"
+	./scripts/package-mac-dmg.sh "$(MAC_EXPORT)/Focus Sync.app" "$(MAC_BUILD_DIR)/$$name"
 
 dmg-mac: notarize-mac package-mac-dmg
 

@@ -11,9 +11,12 @@ import {
 import { wakeMacOnJoin } from "./join_wake.js";
 
 test("joined push has no envelope and no on/off bit", () => {
-  const body = JSON.parse(alertPushBody({ joined: true })) as {
+  const body = JSON.parse(
+    alertPushBody({ joined: true }, { title: "Your phone", body: "Connected" }),
+  ) as {
     aps: {
-      alert?: { title?: string };
+      alert?: { title?: string; body?: string };
+      sound?: string;
       "content-available"?: number;
       "interruption-level"?: string;
       "relevance-score"?: number;
@@ -22,10 +25,12 @@ test("joined push has no envelope and no on/off bit", () => {
     envelope_b64?: string;
     command?: string;
   };
-  assert.equal(body.aps.alert?.title, "Do Not Disturb Sync");
+  assert.equal(body.aps.alert?.title, "Your phone");
+  assert.equal(body.aps.alert?.body, "Connected");
+  assert.equal(body.aps.sound, "default");
   assert.equal(body.aps["content-available"], undefined);
-  assert.equal(body.aps["interruption-level"], "time-sensitive");
-  assert.equal(body.aps["relevance-score"], 1);
+  assert.equal(body.aps["interruption-level"], undefined);
+  assert.equal(body.aps["relevance-score"], undefined);
   assert.equal(body.joined, true);
   assert.equal(body.envelope_b64, undefined);
   assert.equal(body.command, undefined);

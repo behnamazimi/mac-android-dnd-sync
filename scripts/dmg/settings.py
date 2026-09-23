@@ -4,8 +4,8 @@
 # builtin-arrow is dmgbuild's stock background (app on the left, Applications
 # on the right, arrow between). Window size is the compact installer shape,
 # not Finder's default huge folder window. package-mac-dmg.sh copies the
-# stapled DNDSync.app export to Focus Sync.app before this runs, so the
-# volume icon label matches the on-device name.
+# stapled Focus Sync.app export before this runs, so the volume icon
+# label matches the on-device name.
 
 import os
 

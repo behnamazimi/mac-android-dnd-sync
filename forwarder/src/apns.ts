@@ -2,7 +2,7 @@ import { createPrivateKey, sign } from "node:crypto";
 import { connect, type ClientHttp2Session } from "node:http2";
 import type { ApnsEnvironment } from "./store.js";
 
-const TOPIC = "com.dndsync.macos";
+const TOPIC = "com.dndsyncapp.macos";
 const JWT_TTL_MS = 50 * 60 * 1000;
 const SANDBOX_HOST = "https://api.sandbox.push.apple.com";
 const PRODUCTION_HOST = "https://api.push.apple.com";
@@ -111,12 +111,17 @@ export function alertApnsHeaders(nowMs = Date.now()): Record<string, string> {
   };
 }
 
-export function alertPushBody(fields: Record<string, unknown>): string {
+const focusAlert = { title: "Syncing focus state", body: "Started on your phone" };
+const joinedAlert = { title: "Your phone", body: "Connected" };
+
+export function alertPushBody(
+  fields: Record<string, unknown>,
+  alert: { title: string; body: string } = focusAlert,
+): string {
   return JSON.stringify({
     aps: {
-      alert: { title: "Do Not Disturb Sync" },
-      "interruption-level": "time-sensitive",
-      "relevance-score": 1,
+      alert,
+      sound: "default",
     },
     ...fields,
   });
@@ -133,7 +138,11 @@ export async function sendJoinedApns(
   deviceTokenHex: string,
   environment?: ApnsEnvironment,
 ): Promise<void> {
-  await postAlertApns(deviceTokenHex, alertPushBody({ joined: true }), environment);
+  await postAlertApns(
+    deviceTokenHex,
+    alertPushBody({ joined: true }, joinedAlert),
+    environment,
+  );
 }
 
 export async function sendAlertApns(

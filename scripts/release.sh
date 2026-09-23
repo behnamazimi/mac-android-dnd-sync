@@ -100,10 +100,10 @@ if not version_file.is_file():
 elif version_file.read_text().strip() != expected:
     fail(f"VERSION is {version_file.read_text().strip()!r}, expected {expected}")
 
-pbx = (root / "apps/macos/DNDSync.xcodeproj/project.pbxproj").read_text()
+pbx = (root / "apps/macos/FocusSync.xcodeproj/project.pbxproj").read_text()
 app_versions = []
 for block in pbx.split("isa = XCBuildConfiguration"):
-    if "PRODUCT_BUNDLE_IDENTIFIER = com.dndsync.macos;" not in block:
+    if "PRODUCT_BUNDLE_IDENTIFIER = com.dndsyncapp.macos;" not in block:
         continue
     if "macosTests" in block:
         continue
@@ -168,7 +168,7 @@ pending = []
 
 pending.append((root / "VERSION", version + "\n"))
 
-pbx_path = root / "apps/macos/DNDSync.xcodeproj/project.pbxproj"
+pbx_path = root / "apps/macos/FocusSync.xcodeproj/project.pbxproj"
 pbx = pbx_path.read_text()
 pbx, n_m = re.subn(r"MARKETING_VERSION = [^;]+;", f"MARKETING_VERSION = {version};", pbx)
 pbx, n_b = re.subn(r"CURRENT_PROJECT_VERSION = [0-9]+;", f"CURRENT_PROJECT_VERSION = {new_build};", pbx)
@@ -248,12 +248,12 @@ read -r current_ver current_build current_code <<<"$(python3 - "$root" <<'PY'
 import re, sys
 from pathlib import Path
 root = Path(sys.argv[1])
-pbx = (root / "apps/macos/DNDSync.xcodeproj/project.pbxproj").read_text()
+pbx = (root / "apps/macos/FocusSync.xcodeproj/project.pbxproj").read_text()
 gradle = (root / "apps/android/app/build.gradle.kts").read_text()
 app_versions = []
 app_builds = []
 for block in pbx.split("isa = XCBuildConfiguration"):
-    if "PRODUCT_BUNDLE_IDENTIFIER = com.dndsync.macos;" not in block:
+    if "PRODUCT_BUNDLE_IDENTIFIER = com.dndsyncapp.macos;" not in block:
         continue
     if "macosTests" in block:
         continue
@@ -293,7 +293,7 @@ branch="release/${tag}"
 
 CHANGED_FILES=(
 	VERSION
-	apps/macos/DNDSync.xcodeproj/project.pbxproj
+	apps/macos/FocusSync.xcodeproj/project.pbxproj
 	apps/android/app/build.gradle.kts
 	forwarder/package.json
 	forwarder/package-lock.json

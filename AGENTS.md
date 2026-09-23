@@ -23,8 +23,8 @@ currently is).
 
 ## Layout
 
-- `apps/macos/` — Swift/SwiftUI menu-bar app (`DNDSync.xcodeproj`). Source in
-  `apps/macos/DNDSync/`, tests in `apps/macos/DNDSyncTests/`. Runs Shortcuts
+- `apps/macos/` — Swift/SwiftUI menu-bar app (`FocusSync.xcodeproj`). Source in
+  `apps/macos/FocusSync/`, tests in `apps/macos/FocusSyncTests/`. Runs Shortcuts
   (`apps/macos/Shortcuts/*.shortcut`) to actually toggle system Focus.
 - `apps/android/` — Kotlin/Compose app, package `com.dndsync.android`, under
   `apps/android/app/src/main/java/com/dndsync/android/`: `dnd/` (Zen rule
@@ -83,7 +83,7 @@ repo:
   FCM diagnostic script.
 - `scripts/apns-send/AuthKey.p8` — APNs signing key for the diagnostic
   script (`make secrets-apns-p8` also reads this path).
-- `apps/macos/DNDSync/ForwarderSecrets.local.swift` — Mac's forwarder URL,
+- `apps/macos/FocusSync/ForwarderSecrets.local.swift` — Mac's forwarder URL,
   app key, and (once created) pair secret. Xcode copies it from the
   `.example` file automatically on first build; `make secrets-local-mac`
   does the same from the command line. Empty fields still compile, and the
@@ -155,7 +155,7 @@ fights a separately-running debug build for the port.
 ## First run as a developer
 
 The Mac app is a menu-bar extra with no Dock icon. Open
-`apps/macos/DNDSync.xcodeproj` in Xcode and run the **DND Sync** scheme, or
+`apps/macos/FocusSync.xcodeproj` in Xcode and run the **DND Sync** scheme, or
 `make build-mac`. Generate protobuf stubs first if you're not building
 through Xcode. Hardened Runtime is on; App Sandbox is off.
 
@@ -301,7 +301,7 @@ device.
   (`apns-push-type` alert, `apns-priority` 10, no sound) applies Focus the
   same way loopback does. The app discards the banner. `make apns TOKEN=…
   CMD=on|off` needs `APNS_KEY_ID` / `APNS_TEAM_ID` exported and a paid
-  Apple team with Push Notifications enabled on `com.dndsync.macos`. Must
+  Apple team with Push Notifications enabled on `com.dndsyncapp.macos`. Must
   see: Diagnostics shows **APNs: registered**; the push (not just loopback
   curl) flips Do Not Disturb.
 - **Phase 6.A — forwarder, off-LAN.** Both apps registered against the
@@ -341,7 +341,7 @@ device.
   don't print their contents in logs or diagnostics UI.
 - Mirror changes across platforms deliberately: LAN framing
   (`LengthPrefixedFramer`), the `CloudEnvelope`/`DndState` codecs, and E2E
-  crypto exist in near-parallel Swift (`apps/macos/DNDSync/`) and Kotlin
+  crypto exist in near-parallel Swift (`apps/macos/FocusSync/`) and Kotlin
   (`apps/android/.../lan/`, `.../cloud/`) implementations. A protocol-level
   change on one side almost always needs the matching change on the other.
 - Run the platform-appropriate tests (`make test-mac`, `make test-android`,

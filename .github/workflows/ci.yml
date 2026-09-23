@@ -65,6 +65,6 @@ jobs:
 
       - name: xcodebuild test (no signing identity, no device)
         run: |
-          xcodebuild -project apps/macos/DNDSync.xcodeproj -scheme DNDSync \
+          xcodebuild -project apps/macos/FocusSync.xcodeproj -scheme DNDSync \
             -configuration Debug -destination 'platform=macOS' test \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO

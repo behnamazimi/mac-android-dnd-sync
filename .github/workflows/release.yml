@@ -31,7 +31,7 @@ name: Release
 #                                  (dndsync.release.keyAlias)
 #   MACOS_PROVISIONING_PROFILE_BASE64
 #                                  Developer ID Mac provisioning profile for
-#                                  com.dndsync.macos (Push requires one).
+#                                  com.dndsyncapp.macos (Push requires one).
 #                                  `base64 -i Foo.provisionprofile | pbcopy`
 #   FORWARDER_APP_KEY              Same APP_KEY as the Cloud Function secret.
 #                                  Baked into the Mac binary so the QR step
@@ -95,7 +95,7 @@ jobs:
         run: |
           set -euo pipefail
           if [ -z "${PROFILE_BASE64:-}" ]; then
-            printf 'Missing MACOS_PROVISIONING_PROFILE_BASE64. Create a Developer ID provisioning profile for com.dndsync.macos in the Apple Developer portal, then: base64 -i Profile.provisionprofile | pbcopy\n' >&2
+            printf 'Missing MACOS_PROVISIONING_PROFILE_BASE64. Create a Developer ID provisioning profile for com.dndsyncapp.macos in the Apple Developer portal, then: base64 -i Profile.provisionprofile | pbcopy\n' >&2
             exit 1
           fi
           tmp="$RUNNER_TEMP/dndsync.provisionprofile"

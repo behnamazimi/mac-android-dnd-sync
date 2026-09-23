@@ -40,15 +40,18 @@ const APNS_EXPIRATION_SECONDS = 60;
 
 const body = JSON.stringify({
   aps: {
-    alert: { title: "Do Not Disturb Sync" },
-    "interruption-level": "time-sensitive",
-    "relevance-score": 1,
+    alert: {
+      title: "Syncing focus state",
+      body: "Started on your phone",
+    },
+    sound: "default",
   },
   command,
 });
 
 const apnsHost = process.env.APNS_HOST || "https://api.sandbox.push.apple.com";
 const client = connect(apnsHost);
+console.log(`Connecting to ${apnsHost}`);
 try {
   const { status, apnsId, responseBody } = await sendPush(client, {
     token,
@@ -83,7 +86,7 @@ function sendPush(client, { token, jwt, body }) {
       ":method": "POST",
       ":path": `/3/device/${token}`,
       authorization: `bearer ${jwt}`,
-      "apns-topic": "com.dndsync.macos",
+      "apns-topic": "com.dndsyncapp.macos",
       "apns-push-type": "alert",
       "apns-priority": "10",
       "apns-expiration": String(

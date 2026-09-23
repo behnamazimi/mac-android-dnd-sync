@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "AA0000000000000000000040"
-               BuildableName = "DNDSync.app"
+               BuildableName = "Focus Sync.app"
                BlueprintName = "DNDSync"
-               ReferencedContainer = "container:DNDSync.xcodeproj">
+               ReferencedContainer = "container:FocusSync.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
          <BuildActionEntry
@@ -31,7 +31,7 @@
                BlueprintIdentifier = "AA00000000000000000000D0"
                BuildableName = "DNDSyncTests.xctest"
                BlueprintName = "DNDSyncTests"
-               ReferencedContainer = "container:DNDSync.xcodeproj">
+               ReferencedContainer = "container:FocusSync.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -51,7 +51,7 @@
                BlueprintIdentifier = "AA00000000000000000000D0"
                BuildableName = "DNDSyncTests.xctest"
                BlueprintName = "DNDSyncTests"
-               ReferencedContainer = "container:DNDSync.xcodeproj">
+               ReferencedContainer = "container:FocusSync.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -71,9 +71,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "AA0000000000000000000040"
-            BuildableName = "DNDSync.app"
+            BuildableName = "Focus Sync.app"
             BlueprintName = "DNDSync"
-            ReferencedContainer = "container:DNDSync.xcodeproj">
+            ReferencedContainer = "container:FocusSync.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -88,9 +88,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "AA0000000000000000000040"
-            BuildableName = "DNDSync.app"
+            BuildableName = "Focus Sync.app"
             BlueprintName = "DNDSync"
-            ReferencedContainer = "container:DNDSync.xcodeproj">
+            ReferencedContainer = "container:FocusSync.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

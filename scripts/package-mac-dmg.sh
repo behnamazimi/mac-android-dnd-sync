@@ -6,11 +6,11 @@ set -euo pipefail
 # dmgbuild in a throwaway venv so we do not need Finder AppleScript, which
 # is flaky on GitHub Actions. Never prints secret values.
 #
-# Xcode still exports DNDSync.app. The public image shows Focus Sync.app
-# (same stapled bundle, copied at pack time) on a volume named Focus Sync.
+# Xcode exports Focus Sync.app. The image shows that same bundle on a
+# volume named Focus Sync.
 
 if [[ $# -ne 2 ]]; then
-	printf 'Usage: %s <DNDSync.app> <output.dmg>\n' "$(basename "$0")" >&2
+	printf 'Usage: %s <Focus Sync.app> <output.dmg>\n' "$(basename "$0")" >&2
 	exit 1
 fi
 
