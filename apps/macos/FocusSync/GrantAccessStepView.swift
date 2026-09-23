@@ -4,6 +4,7 @@ struct GrantAccessStepView: View {
     @Bindable var model: FocusHarnessModel
 
     private var notificationsDenied: Bool { model.notificationsDenied }
+    private var focusDenied: Bool { model.focusAccess == .denied }
 
     var body: some View {
         Form {
@@ -18,11 +19,21 @@ struct GrantAccessStepView: View {
                             .foregroundStyle(.secondary)
                     }
                 }
+                LabeledContent {
+                    PermissionStatusIcon(granted: model.focusAccess == .granted)
+                } label: {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(ProductCopy.focusStatusRowTitle)
+                        Text(ProductCopy.focusStatusRowSubtitle)
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+                }
             } header: {
                 Text(ProductCopy.grantAccessTitle)
             } footer: {
                 Text(footer)
-                    .foregroundStyle(model.automationDenied || notificationsDenied ? .red : .secondary)
+                    .foregroundStyle(model.automationDenied || notificationsDenied || focusDenied ? .red : .secondary)
             }
             Section {
                 HStack {
@@ -32,6 +43,9 @@ struct GrantAccessStepView: View {
                             .buttonStyle(.borderedProminent)
                     } else if notificationsDenied {
                         Button(ProductCopy.openNotifications, action: model.openNotificationSettings)
+                            .buttonStyle(.borderedProminent)
+                    } else if focusDenied {
+                        Button(ProductCopy.openFocusStatus, action: model.openFocusStatusSettings)
                             .buttonStyle(.borderedProminent)
                     } else {
                         Button(ProductCopy.continueLabel, action: model.requestGrantAccessPermissions)
@@ -46,6 +60,7 @@ struct GrantAccessStepView: View {
     private var footer: String {
         if model.automationDenied { return ProductCopy.automationDenied }
         if notificationsDenied { return ProductCopy.notificationsDenied }
+        if focusDenied { return ProductCopy.focusStatusDenied }
         return ProductCopy.grantAccessBody
     }
 }

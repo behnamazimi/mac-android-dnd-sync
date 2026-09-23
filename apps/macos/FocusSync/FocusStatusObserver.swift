@@ -1,20 +1,20 @@
-import Darwin
 import Foundation
+import Intents
 
-/// Reads whether a Focus is currently silencing this Mac, and watches for
-/// flips. Control Center no longer posts `_NSDoNotDisturb*` on current
-/// macOS — those names stay as a fallback. The live source is
-/// `DNDStateService` in the private DoNotDisturb framework, loaded at
-/// runtime so a missing framework cannot crash launch.
+/// Reads whether a Focus is currently on for this Mac, and watches for flips.
+/// The live source is `INFocusStatusCenter`, which needs the Communication
+/// Notifications entitlement plus the user's Focus Status permission (see
+/// `FocusStatusAccess`). The private `DNDStateService` rejects every
+/// third-party client, so it is not used. Control Center rarely posts
+/// `_NSDoNotDisturb*` any more; those names stay as a fallback.
 final class FocusStatusObserver: NSObject {
     static let enabledName = Notification.Name("_NSDoNotDisturbEnabledNotification")
     static let disabledName = Notification.Name("_NSDoNotDisturbDisabledNotification")
 
     /// `originates` is false for the first snapshot so launching the app
-    /// does not push the current Focus to the phone.
+    /// (or granting access) does not push the current Focus to the phone.
     var onChange: ((Bool, String, Bool) -> Void)?
 
-    private var dndService: AnyObject?
     private var lastOn: Bool?
     private var pollTimer: DispatchSourceTimer?
 
@@ -32,7 +32,7 @@ final class FocusStatusObserver: NSObject {
             )
         }
         if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil {
-            startDNDStateService()
+            startPolling()
         }
     }
 
@@ -42,10 +42,7 @@ final class FocusStatusObserver: NSObject {
     }
 
     func refresh() {
-        guard let service = dndService else { return }
-        DNDFocusBridge.query(service) { [weak self] state in
-            self?.apply(state: state, originates: true)
-        }
+        poll()
     }
 
     @objc private func handleLegacyNotification(_ notification: Notification) {
@@ -62,44 +59,26 @@ final class FocusStatusObserver: NSObject {
         return notification.name == enabledName
     }
 
-    static func isOn(willSuppressInterruptions: Bool?, isActive: Bool?) -> Bool? {
-        if let suppress = willSuppressInterruptions {
-            return suppress
-        }
-        return isActive
-    }
-
-    @objc(stateService:didReceiveDoNotDisturbStateUpdate:)
-    func stateService(_ service: Any, didReceiveDoNotDisturbStateUpdate update: Any) {
-        apply(state: DNDFocusBridge.state(fromUpdate: update), originates: true)
-    }
-
-    private func startDNDStateService() {
-        guard let service = DNDFocusBridge.makeService() else { return }
-        dndService = service
-        DNDFocusBridge.query(service) { [weak self] state in
-            self?.apply(state: state, originates: false)
-        }
-        startPolling(service)
-    }
-
-    private func startPolling(_ service: AnyObject) {
+    /// `INFocusStatusCenter` has no change callback on macOS, so poll. The
+    /// status is a cheap local read. Until access is granted `isFocused`
+    /// stays nil and nothing is published.
+    private func startPolling() {
         let timer = DispatchSource.makeTimerSource(queue: .main)
-        timer.schedule(deadline: .now() + 1, repeating: 1)
+        timer.schedule(deadline: .now(), repeating: 1)
         timer.setEventHandler { [weak self] in
-            DNDFocusBridge.query(service) { state in
-                self?.apply(state: state, originates: true)
-            }
+            self?.poll()
         }
         timer.resume()
         pollTimer = timer
     }
 
-    private func apply(state: AnyObject?, originates: Bool) {
-        guard let state, let enabled = DNDFocusBridge.isOn(fromState: state) else {
+    private func poll() {
+        guard FocusStatusAccess.current == .granted,
+              let enabled = INFocusStatusCenter.default.focusStatus.isFocused
+        else {
             return
         }
-        publish(enabled, originates: originates)
+        publish(enabled, originates: lastOn != nil)
     }
 
     private func publish(_ enabled: Bool, originates: Bool) {
@@ -161,63 +140,33 @@ final class FocusStatusObserver: NSObject {
     }
 }
 
-/// Soft-links DoNotDisturb.framework. Selectors are strings on purpose —
-/// a hard link would crash on an OS that renamed the class.
-private enum DNDFocusBridge {
-    private static let frameworkPaths = [
-        "/System/Library/PrivateFrameworks/DoNotDisturb.framework/DoNotDisturb",
-        "/System/Library/PrivateFrameworks/DoNotDisturb.framework/Versions/A/DoNotDisturb",
-    ]
+/// The user's Focus Status permission (System Settings → Privacy &
+/// Security → Focus). Without it `INFocusStatusCenter` reports nothing.
+enum FocusStatusAccess: Equatable {
+    case notDetermined
+    case granted
+    case denied
 
-    static func makeService() -> AnyObject? {
-        for path in frameworkPaths {
-            _ = dlopen(path, RTLD_LAZY)
-        }
-        guard let cls: AnyClass = NSClassFromString("DNDStateService") else {
-            return nil
-        }
-        let sel = NSSelectorFromString("serviceForClientIdentifier:")
-        let object = cls as AnyObject
-        guard object.responds(to: sel) else { return nil }
-        let identifier = Bundle.main.bundleIdentifier ?? "com.dndsyncapp.macos"
-        return object.perform(sel, with: identifier)?.takeUnretainedValue()
+    static var current: FocusStatusAccess {
+        map(INFocusStatusCenter.default.authorizationStatus)
     }
 
-    static func query(_ service: AnyObject, completion: @escaping (AnyObject?) -> Void) {
-        let sel = NSSelectorFromString("queryCurrentStateWithCompletionHandler:")
-        guard service.responds(to: sel) else {
-            completion(nil)
-            return
+    static func request() async -> FocusStatusAccess {
+        await withCheckedContinuation { continuation in
+            INFocusStatusCenter.default.requestAuthorization { status in
+                continuation.resume(returning: map(status))
+            }
         }
-        let block: @convention(block) (AnyObject?, NSError?) -> Void = { state, _ in
-            DispatchQueue.main.async { completion(state) }
-        }
-        _ = service.perform(sel, with: unsafeBitCast(block, to: AnyObject.self))
     }
 
-    static func state(fromUpdate update: Any) -> AnyObject? {
-        let object = update as AnyObject
-        if object.responds(to: NSSelectorFromString("state")) {
-            return object.value(forKey: "state") as AnyObject?
-        }
-        return object
-    }
-
-    static func isOn(fromState state: AnyObject) -> Bool? {
-        FocusStatusObserver.isOn(
-            willSuppressInterruptions: bool(from: state.value(forKey: "willSuppressInterruptions")),
-            isActive: bool(from: state.value(forKey: "active"))
-        )
-    }
-
-    private static func bool(from value: Any?) -> Bool? {
-        switch value {
-        case let number as NSNumber:
-            return number.boolValue
-        case let flag as Bool:
-            return flag
+    private static func map(_ status: INFocusStatusAuthorizationStatus) -> FocusStatusAccess {
+        switch status {
+        case .authorized:
+            return .granted
+        case .denied, .restricted:
+            return .denied
         default:
-            return nil
+            return .notDetermined
         }
     }
 }
