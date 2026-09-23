@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		AA0000000000000000000001 /* DNDSyncApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000011 /* DNDSyncApp.swift */; };
+		AA0000000000000000000001 /* FocusSyncApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000011 /* FocusSyncApp.swift */; };
 		AA0000000000000000000147 /* ProductRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000146 /* ProductRootView.swift */; };
 		AA0000000000000000000149 /* WelcomeStepView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000148 /* WelcomeStepView.swift */; };
 		AA000000000000000000014B /* GrantAccessStepView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000014A /* GrantAccessStepView.swift */; };
@@ -67,7 +67,7 @@
 
 /* Begin PBXFileReference section */
 		AA0000000000000000000010 /* Focus Sync.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Focus Sync.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		AA0000000000000000000011 /* DNDSyncApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DNDSyncApp.swift; sourceTree = "<group>"; };
+		AA0000000000000000000011 /* FocusSyncApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusSyncApp.swift; sourceTree = "<group>"; };
 		AA0000000000000000000146 /* ProductRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductRootView.swift; sourceTree = "<group>"; };
 		AA0000000000000000000148 /* WelcomeStepView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeStepView.swift; sourceTree = "<group>"; };
 		AA000000000000000000014A /* GrantAccessStepView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrantAccessStepView.swift; sourceTree = "<group>"; };
@@ -155,7 +155,7 @@
 		AA0000000000000000000031 /* DNDSync */ = {
 			isa = PBXGroup;
 			children = (
-				AA0000000000000000000011 /* DNDSyncApp.swift */,
+				AA0000000000000000000011 /* FocusSyncApp.swift */,
 				AA0000000000000000000015 /* ShortcutRunner.swift */,
 				AA0000000000000000000016 /* FocusStatusObserver.swift */,
 				AA0000000000000000000130 /* FocusApply.swift */,
@@ -393,7 +393,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				AA0000000000000000000001 /* DNDSyncApp.swift in Sources */,
+				AA0000000000000000000001 /* FocusSyncApp.swift in Sources */,
 				AA0000000000000000000004 /* ShortcutRunner.swift in Sources */,
 				AA0000000000000000000005 /* FocusStatusObserver.swift in Sources */,
 				AA0000000000000000000131 /* FocusApply.swift in Sources */,
@@ -538,7 +538,7 @@
 				CODE_SIGN_ENTITLEMENTS = FocusSync/DNDSync.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 9;
 				DEVELOPMENT_TEAM = MVSF9NZ97S;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -553,8 +553,9 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.5.0;
+				MARKETING_VERSION = 0.6.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.dndsyncapp.macos;
+				PRODUCT_MODULE_NAME = FocusSync;
 				PRODUCT_NAME = "Focus Sync";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -568,7 +569,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = "FocusSync/DNDSync-Release.entitlements";
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 9;
 				DEVELOPMENT_TEAM = MVSF9NZ97S;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -583,8 +584,9 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.5.0;
+				MARKETING_VERSION = 0.6.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.dndsyncapp.macos;
+				PRODUCT_MODULE_NAME = FocusSync;
 				PRODUCT_NAME = "Focus Sync";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -596,11 +598,11 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 9;
 				DEVELOPMENT_TEAM = MVSF9NZ97S;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.5.0;
+				MARKETING_VERSION = 0.6.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.dndsyncapp.macosTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
@@ -614,11 +616,11 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 9;
 				DEVELOPMENT_TEAM = MVSF9NZ97S;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.5.0;
+				MARKETING_VERSION = 0.6.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.dndsyncapp.macosTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;

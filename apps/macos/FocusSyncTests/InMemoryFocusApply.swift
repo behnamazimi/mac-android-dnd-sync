@@ -1,5 +1,5 @@
 import Foundation
-@testable import DNDSync
+@testable import FocusSync
 
 @MainActor
 final class InMemoryFocusApply: FocusApply {
