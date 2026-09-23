@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import os
 import UserNotifications
@@ -18,6 +19,20 @@ final class ApnsPushReceiver {
     var onJoinedWake: (() -> Void)?
 
     private init() {}
+
+    /// Launch registers before the user allows notifications, so macOS files
+    /// the topic as non-waking and later drops pushes as an unknown token.
+    /// Call again once notification permission is granted, and whenever the
+    /// app becomes active, so this process is the connected client for the token.
+    static func reregisterIfAuthorized() {
+        Task { @MainActor in
+            let settings = await UNUserNotificationCenter.current().notificationSettings()
+            debug("apns notification auth=\(settings.authorizationStatus.rawValue)")
+            guard settings.authorizationStatus == .authorized else { return }
+            NSApplication.shared.registerForRemoteNotifications()
+            debug("apns reregister")
+        }
+    }
 
     func didRegister(deviceToken: Data) {
         deviceTokenHex = deviceToken.map { String(format: "%02x", $0) }.joined()

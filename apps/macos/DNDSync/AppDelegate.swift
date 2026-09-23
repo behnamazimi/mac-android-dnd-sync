@@ -17,6 +17,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         // than fired silently at launch.
         NSApplication.shared.registerForRemoteNotifications()
         ApnsPushReceiver.debug("apns listener ready")
+        ApnsPushReceiver.reregisterIfAuthorized()
         chrome = ProductChrome()
     }
 
@@ -29,6 +30,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
 
     func applicationDidBecomeActive(_ notification: Notification) {
         chrome?.becomeActive()
+        ApnsPushReceiver.reregisterIfAuthorized()
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {

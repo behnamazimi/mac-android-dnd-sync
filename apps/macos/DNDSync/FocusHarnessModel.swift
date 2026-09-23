@@ -510,6 +510,9 @@ final class FocusHarnessModel {
                 .requestAuthorization(options: [.alert, .sound])
             notificationsGranted = granted ?? false
             notificationsRequested = true
+            if granted == true {
+                NSApplication.shared.registerForRemoteNotifications()
+            }
         }
     }
 
