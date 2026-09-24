@@ -264,7 +264,111 @@ final class PairSessionTests: XCTestCase {
         XCTAssertEqual(session.open(sealed), plain)
     }
 
-    private func joinedSession(forwarder: FakePairForwarder, store: InMemoryPairStore) -> PairSession {
+    func testRegisterDeviceSkipsUnchangedToken() async {
+        let forwarder = FakePairForwarder()
+        let store = InMemoryPairStore()
+        var token = "token-hex"
+        let session = joinedSession(forwarder: forwarder, store: store, apnsToken: { token })
+
+        await session.registerDevice()
+        await session.registerDevice()
+        XCTAssertEqual(forwarder.registeredTokens, ["token-hex"])
+
+        token = "token-new"
+        await session.registerDevice()
+        XCTAssertEqual(forwarder.registeredTokens, ["token-hex", "token-new"])
+
+        // The fingerprint survives a relaunch.
+        let relaunched = PairSession(
+            forwarder: forwarder,
+            store: store,
+            secrets: PairSecretsSource(baseURL: "https://example.invalid", appKey: "key"),
+            apnsToken: { token }
+        )
+        relaunched.restore()
+        await relaunched.registerDevice()
+        XCTAssertEqual(forwarder.registeredTokens.count, 2)
+    }
+
+    func testCreateCountsAsRegistration() async {
+        let forwarder = FakePairForwarder()
+        let session = PairSession(
+            forwarder: forwarder,
+            store: InMemoryPairStore(),
+            secrets: PairSecretsSource(baseURL: "https://example.invalid", appKey: "key"),
+            apnsToken: { "token-hex" },
+            deviceName: { "Test Mac" }
+        )
+        await session.registerDevice()
+        XCTAssertTrue(forwarder.registeredTokens.isEmpty, "no server pair yet")
+
+        await session.create()
+        await session.registerDevice()
+        XCTAssertTrue(forwarder.registeredTokens.isEmpty)
+    }
+
+    func testPairCheckIsThrottled() async {
+        let forwarder = FakePairForwarder()
+        var now = Date(timeIntervalSince1970: 1_000)
+        let session = joinedSession(
+            forwarder: forwarder,
+            store: InMemoryPairStore(),
+            now: { now }
+        )
+
+        await session.refreshPairOrUnpair()
+        now += 60
+        await session.refreshPairOrUnpair()
+        XCTAssertEqual(forwarder.listCount, 1)
+
+        now += PairSession.pairCheckInterval
+        await session.refreshPairOrUnpair()
+        XCTAssertEqual(forwarder.listCount, 2)
+    }
+
+    func testUnpairDoesNotCreateNextPair() async {
+        let forwarder = FakePairForwarder()
+        let session = joinedSession(forwarder: forwarder, store: InMemoryPairStore())
+
+        session.unpair(notifyPeer: false)
+        for _ in 0..<50 where !forwarder.deleted {
+            await Task.yield()
+        }
+
+        XCTAssertTrue(forwarder.deleted)
+        XCTAssertEqual(forwarder.createCount, 0)
+        XCTAssertFalse(session.createdPairForCurrentId)
+
+        await session.create()
+        XCTAssertEqual(forwarder.createCount, 1)
+    }
+
+    func testPeerPollStopsWhenNoLongerShown() async {
+        let forwarder = FakePairForwarder()
+        let session = PairSession(
+            forwarder: forwarder,
+            store: InMemoryPairStore(),
+            secrets: PairSecretsSource(baseURL: "https://example.invalid", appKey: "key"),
+            apnsToken: { "token-hex" },
+            deviceName: { "Test Mac" }
+        )
+        await session.create()
+        let shown = false
+
+        session.startPeerPoll(shouldContinue: { shown })
+        for _ in 0..<50 {
+            await Task.yield()
+        }
+
+        XCTAssertEqual(forwarder.listCount, 0)
+    }
+
+    private func joinedSession(
+        forwarder: FakePairForwarder,
+        store: InMemoryPairStore,
+        apnsToken: @escaping () -> String = { "token-hex" },
+        now: @escaping () -> Date = Date.init
+    ) -> PairSession {
         let mac = E2ECrypto.generateIdentity()
         let phone = E2ECrypto.generateIdentity()
         store.stored = PersistedPair(
@@ -279,7 +383,8 @@ final class PairSessionTests: XCTestCase {
             forwarder: forwarder,
             store: store,
             secrets: PairSecretsSource(baseURL: "https://example.invalid", appKey: "key"),
-            apnsToken: { "token-hex" }
+            apnsToken: apnsToken,
+            now: now
         )
         session.restore()
         return session

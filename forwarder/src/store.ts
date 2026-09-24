@@ -4,12 +4,6 @@ export type Sender = "mac" | "android";
 export type Platform = "apns" | "fcm";
 export type ApnsEnvironment = "sandbox" | "production";
 
-export type PairRecord = {
-  secretHash: string;
-  createdAt?: Timestamp;
-  updatedAt?: Timestamp;
-};
-
 export type DeviceRecord = {
   platform: Platform;
   token: string;
@@ -17,6 +11,27 @@ export type DeviceRecord = {
   apnsEnvironment?: ApnsEnvironment;
   updatedAt?: Timestamp;
 };
+
+// Push route mirrored onto the pair doc so an envelope needs one read
+// (the auth read) instead of a second read of the peer's device doc.
+export type PushRoute = Pick<DeviceRecord, "platform" | "token" | "apnsEnvironment">;
+
+export type PairRecord = {
+  secretHash: string;
+  devices?: Partial<Record<Sender, PushRoute>>;
+  createdAt?: Timestamp;
+  updatedAt?: Timestamp;
+};
+
+// The peer's push route from the pair doc, or undefined for a pair written
+// before routes were mirrored there (callers then read the device doc).
+export function peerFromPair(pair: PairRecord, sender: Sender): PushRoute | undefined {
+  const route = pair.devices?.[sender];
+  if (!route?.token || !route.platform) {
+    return undefined;
+  }
+  return route;
+}
 
 function db() {
   return getFirestore();
@@ -46,7 +61,11 @@ export async function createPair(
   pairId: string,
   secretHash: string,
 ): Promise<void> {
-  await deletePair(pairId);
+  // Only a re-used id (DEBUG fixed id, Mac re-posting its QR) has old
+  // devices to clear; a fresh random id skips the collection read + batch.
+  if ((await pairRef(pairId).get()).exists) {
+    await deletePair(pairId);
+  }
   await pairRef(pairId).set({
     secretHash,
     createdAt: FieldValue.serverTimestamp(),
@@ -72,10 +91,18 @@ export async function upsertDevice(
   if (record.e2ePublicKey !== undefined) {
     payload.e2ePublicKey = record.e2ePublicKey;
   }
+  const route: Record<string, unknown> = {
+    platform: record.platform,
+    token: record.token,
+  };
   if (record.apnsEnvironment !== undefined) {
     payload.apnsEnvironment = record.apnsEnvironment;
+    route.apnsEnvironment = record.apnsEnvironment;
   }
-  await deviceRef(pairId, sender).set(payload, { merge: true });
+  const batch = db().batch();
+  batch.set(deviceRef(pairId, sender), payload, { merge: true });
+  batch.set(pairRef(pairId), { devices: { [sender]: route } }, { merge: true });
+  await batch.commit();
 }
 
 export async function getDevice(

@@ -9,7 +9,7 @@ final class SyncSessionTests: XCTestCase {
         let pair = FakeSyncPairing()
         pair.joined = true
         var now: Int64 = 1_000
-        let session = SyncSession(lan: lan, cloud: cloud, pair: pair, nowMs: { now })
+        let session = SyncSession(lan: lan, cloud: cloud, pair: pair, nowMs: { now }, cloudCoalesce: .zero)
 
         session.onLocalFocusChange(on: true)
         try? await Task.sleep(nanoseconds: 20_000_000)
@@ -19,6 +19,31 @@ final class SyncSessionTests: XCTestCase {
         XCTAssertEqual(pair.lastSync?.on, true)
         XCTAssertEqual(pair.lastSync?.viaLan, false)
         _ = now
+        _ = session
+    }
+
+    func testQuickLocalFlipsCoalesceIntoOneCloudPost() async {
+        let cloud = InMemorySyncCloud()
+        let pair = FakeSyncPairing()
+        pair.joined = true
+        var now: Int64 = 1_000
+        let session = SyncSession(
+            lan: InMemorySyncLan(),
+            cloud: cloud,
+            pair: pair,
+            nowMs: { now },
+            cloudCoalesce: .milliseconds(100)
+        )
+
+        session.onLocalFocusChange(on: true)
+        now = 1_200
+        session.onLocalFocusChange(on: false)
+        now = 1_400
+        session.onLocalFocusChange(on: true)
+        try? await Task.sleep(nanoseconds: 300_000_000)
+
+        XCTAssertEqual(cloud.posts.count, 1)
+        XCTAssertEqual(pair.lastSync?.on, true)
         _ = session
     }
 
@@ -33,7 +58,8 @@ final class SyncSessionTests: XCTestCase {
             lan: lan,
             cloud: cloud,
             pair: pair,
-            nowMs: { now }
+            nowMs: { now },
+            cloudCoalesce: .zero
         )
         session.onApplyRemote = { applied.append($0) }
 
@@ -64,7 +90,8 @@ final class SyncSessionTests: XCTestCase {
             lan: InMemorySyncLan(),
             cloud: cloud,
             pair: pair,
-            nowMs: { now }
+            nowMs: { now },
+            cloudCoalesce: .zero
         )
 
         session.onInboundState(

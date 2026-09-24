@@ -64,6 +64,9 @@ final class FocusHarnessModel {
     /// Copied from pair session in `pullPairState()`. Must be stored so
     /// Observation invalidates `destination` when the user unpairs.
     var paired = false
+    /// Set by `ProductChrome`. The QR screen only talks to the forwarder
+    /// (create the pair, poll for the phone) while someone can see it.
+    private(set) var mainWindowVisible = false
 
     var pairIdText: String { pair.pairId }
 
@@ -464,7 +467,9 @@ final class FocusHarnessModel {
                 pair.qrMessage = ProductCopy.waitingApns
                 pullPairState()
             } else if !pair.createdPairForCurrentId {
-                Task { await pair.create() }
+                if mainWindowVisible {
+                    Task { await pair.create() }
+                }
             } else if pair.qrMessage == nil || pair.qrMessage == ProductCopy.waitingApns {
                 pair.qrMessage = ProductCopy.waitingPhone
                 pullPairState()
@@ -484,11 +489,22 @@ final class FocusHarnessModel {
     /// pair exists, instead of behind a manual "Check again" tap.
     /// `startPeerPoll` no-ops if a poll loop is already running.
     private func maybeStartPeerPoll() {
-        guard destination == .qr, pair.createdPairForCurrentId, !pair.joined else {
+        guard mainWindowVisible, destination == .qr, pair.createdPairForCurrentId, !pair.joined else {
             return
         }
         pair.startPeerPoll { [weak self] in
-            self?.destination == .qr
+            guard let self else { return false }
+            return self.mainWindowVisible && self.destination == .qr
+        }
+    }
+
+    func setMainWindowVisible(_ visible: Bool) {
+        guard visible != mainWindowVisible else { return }
+        mainWindowVisible = visible
+        if visible {
+            handleDestination(destination)
+        } else {
+            pair.stopPeerPoll()
         }
     }
 

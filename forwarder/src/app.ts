@@ -16,6 +16,7 @@ import {
   deletePair,
   getDevice,
   listDevicePublicKeys,
+  peerFromPair,
   upsertDevice,
   type ApnsEnvironment,
   type Platform,
@@ -109,7 +110,15 @@ app.post("/v1/pairs/:pairId/join", async (c) => {
   });
   if (body.sender === "android") {
     try {
-      await wakeMacOnJoin(pairId, sendJoinedApns);
+      // The Android upsert above doesn't touch the Mac's route, so the pair
+      // doc read during auth already has it for pairs written since routes
+      // were mirrored there.
+      const macRoute = peerFromPair(pair, "mac");
+      await wakeMacOnJoin(
+        pairId,
+        sendJoinedApns,
+        macRoute ? async () => macRoute : undefined,
+      );
     } catch (error) {
       const message = error instanceof Error ? error.message : "join wake failed";
       console.error("join wake failed", message);
@@ -201,7 +210,8 @@ app.post("/v1/pairs/:pairId/envelopes", async (c) => {
   if (!isSender(envelope.sender)) {
     return c.json({ error: "invalid sender" }, 400);
   }
-  const peer = await getDevice(pairId, otherSender(envelope.sender));
+  const peerSender = otherSender(envelope.sender);
+  const peer = peerFromPair(pair, peerSender) ?? (await getDevice(pairId, peerSender));
   if (!peer?.token) {
     console.error(`[DEBUG] envelope sender=${envelope.sender} peer has no token`);
     return c.json({ error: "peer not registered" }, 409);
