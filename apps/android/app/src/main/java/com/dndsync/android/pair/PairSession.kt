@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Create, restore, QR, join, unpair. Owns E2E keys.
@@ -46,6 +47,9 @@ class PairSession(
     private var peerPublicKey: ByteArray? = null
     private var aesKey: ByteArray? = null
     @Volatile private var joinSucceeded = false
+    @Volatile private var joinRejected = false
+    @Volatile private var registeredFingerprint = ""
+    private val joinInFlight = AtomicBoolean(false)
 
     override val joined: Boolean get() = joinSucceeded
     val hasStoredPair: Boolean
@@ -72,6 +76,10 @@ class PairSession(
     fun registerToken(pushToken: String) {
         if (joinSucceeded) {
             registerDevice(pushToken)
+            return
+        }
+        // A rejected code stays rejected; wait for a new QR or paste.
+        if (joinRejected) {
             return
         }
         if (storedPairId.isNotEmpty() && storedPairSecret.isNotEmpty() && storedForwarderUrl.isNotEmpty()) {
@@ -129,6 +137,8 @@ class PairSession(
         peerPublicKey = peer
         aesKey = E2ECrypto.deriveAesKey(identity.privateKey, peer)
         joinSucceeded = false
+        joinRejected = false
+        registeredFingerprint = ""
         persist(joinSucceeded = false)
         postToMain { onPairIdChange?.invoke(storedPairId) }
         val pushToken = token()
@@ -148,7 +158,9 @@ class PairSession(
             }
             return
         }
-        joinCurrent(pushToken)
+        // A new code the user just scanned always joins, even if a join of
+        // the previous code is still in flight.
+        joinCurrent(pushToken, force = true)
     }
 
     fun unpair(notifyPeer: Boolean = true) {
@@ -270,6 +282,8 @@ class PairSession(
             aesKey = E2ECrypto.deriveAesKey(identity.privateKey, peer)
         }
         joinSucceeded = saved.joinSucceeded
+        joinRejected = saved.joinRejected
+        registeredFingerprint = saved.registeredFingerprint
         onPairIdChange?.invoke(storedPairId)
         _ui.update {
             it.copy(
@@ -285,20 +299,19 @@ class PairSession(
                 lastSyncViaLan = saved.lastSyncViaLan,
             )
         }
-        if (!joinSucceeded) {
-            val pushToken = token()
-            if (!pushToken.isNullOrEmpty()) {
-                joinCurrent(pushToken)
-            }
-        } else {
-            token()?.let { registerDevice(it) }
-        }
+        // No network here: `FcmTokenBootstrapper` calls `registerToken` once
+        // per process start, and Android starts the process for every FCM push.
     }
 
     private fun registerDevice(pushToken: String) {
         if (storedForwarderUrl.isEmpty() || storedPairSecret.isEmpty()) {
             return
         }
+        val current = fingerprint(pushToken)
+        if (current == registeredFingerprint) {
+            return
+        }
+        val pairIdAtLaunch = storedPairId
         scope.launch {
             try {
                 forwarder.registerDevice(
@@ -310,6 +323,11 @@ class PairSession(
                     token = pushToken,
                     e2ePublicKey = E2ECrypto.publicKeyB64(identity.publicKey),
                 )
+                // Unpaired while the PUT was in flight: don't write the old pair back.
+                if (storedPairId == pairIdAtLaunch && hasStoredPair) {
+                    registeredFingerprint = current
+                    persist(joinSucceeded = joinSucceeded)
+                }
                 _ui.update {
                     it.copy(
                         lastRegister = "204",
@@ -334,7 +352,10 @@ class PairSession(
         }
     }
 
-    private fun joinCurrent(pushToken: String) {
+    private fun joinCurrent(pushToken: String, force: Boolean = false) {
+        if (!joinInFlight.compareAndSet(false, true) && !force) {
+            return
+        }
         scope.launch {
             try {
                 forwarder.joinPair(
@@ -347,6 +368,8 @@ class PairSession(
                     e2ePublicKey = E2ECrypto.publicKeyB64(identity.publicKey),
                 )
                 joinSucceeded = true
+                joinRejected = false
+                registeredFingerprint = fingerprint(pushToken)
                 persist(joinSucceeded = true)
                 _ui.update {
                     it.copy(
@@ -365,6 +388,7 @@ class PairSession(
                 postToMain { onJoined?.invoke() }
             } catch (error: Exception) {
                 joinSucceeded = false
+                joinRejected = error.isUnauthorized()
                 try {
                     persist(joinSucceeded = false)
                 } catch (_: Exception) {
@@ -387,6 +411,8 @@ class PairSession(
                         macDeviceName = macDeviceName,
                     )
                 }
+            } finally {
+                joinInFlight.set(false)
             }
         }
     }
@@ -397,6 +423,8 @@ class PairSession(
         aesKey = null
         peerPublicKey = null
         joinSucceeded = false
+        joinRejected = false
+        registeredFingerprint = ""
         storedPairId = ""
         storedPairSecret = ""
         storedForwarderUrl = ""
@@ -431,9 +459,14 @@ class PairSession(
                 lastSyncOn = existing?.lastSyncOn ?: false,
                 lastSyncSender = existing?.lastSyncSender.orEmpty(),
                 lastSyncViaLan = existing?.lastSyncViaLan ?: false,
+                registeredFingerprint = registeredFingerprint,
+                joinRejected = joinRejected,
             ),
         )
     }
+
+    private fun fingerprint(pushToken: String): String =
+        E2ECrypto.sha256Hex("$storedPairId|$pushToken|${E2ECrypto.publicKeyB64(identity.publicKey)}")
 
     private fun productCloudError(error: Exception): String {
         if (error.isUnauthorized()) {

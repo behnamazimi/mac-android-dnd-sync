@@ -292,6 +292,9 @@ final class ProductChrome: NSObject, NSWindowDelegate {
     private func orderFrontAppWindow(_ window: NSWindow) {
         NSApp.setActivationPolicy(.regular)
         raiseAppWindow(window)
+        if window === mainWindow {
+            model.setMainWindowVisible(true)
+        }
         // Policy changes land on the next turn; raise again once AppKit
         // has a Dock icon, otherwise the first click can still lose.
         Task { @MainActor [weak self, weak window] in
@@ -378,6 +381,9 @@ final class ProductChrome: NSObject, NSWindowDelegate {
             presentation.settingsPresented = false
         }
         sender.orderOut(nil)
+        if sender === mainWindow {
+            model.setMainWindowVisible(false)
+        }
         updateActivationPolicy()
         return false
     }

@@ -12,6 +12,8 @@ final class InMemoryPairStore: PairStoring {
 final class FakePairForwarder: PairForwarder {
     var devices: [ForwarderDevice] = []
     var created = false
+    var createCount = 0
+    var listCount = 0
     var deleted = false
     var envelopes: [Data] = []
     var registeredTokens: [String] = []
@@ -49,6 +51,7 @@ final class FakePairForwarder: PairForwarder {
     ) async throws {
         if let error { throw error }
         created = true
+        createCount += 1
         apnsEnvironments.append(apnsEnvironment)
     }
 
@@ -57,6 +60,7 @@ final class FakePairForwarder: PairForwarder {
         pairId: String,
         secret: String
     ) async throws -> [ForwarderDevice] {
+        listCount += 1
         if let listError { throw listError }
         if let error { throw error }
         return devices

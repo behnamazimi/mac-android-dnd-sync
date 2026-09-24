@@ -117,6 +117,89 @@ class PairSessionTests {
         assertEquals(CloudCopy.PAIRING_CODE_REJECTED, session.ui.value.pairError)
     }
 
+    @Test
+    fun restoreMakesNoNetworkCalls() {
+        val forwarder = FakePairForwarder()
+        val store = InMemoryPairStore()
+        store.stored = storedPair(joinSucceeded = true)
+        session(forwarder, store, token = { "fcm-token" })
+
+        store.stored = storedPair(joinSucceeded = false)
+        session(forwarder, store, token = { "fcm-token" })
+
+        assertEquals(0, forwarder.registerCount)
+        assertEquals(0, forwarder.joinCount)
+    }
+
+    @Test
+    fun registerTokenSkipsUnchangedToken() {
+        val forwarder = FakePairForwarder()
+        val store = InMemoryPairStore()
+        val session = session(forwarder, store, token = { "fcm-token" })
+        session.pastePayload(payloadJson())
+        assertEquals(1, forwarder.joinCount)
+
+        // Join already registered this token.
+        session.registerToken("fcm-token")
+        assertEquals(0, forwarder.registerCount)
+
+        session.registerToken("fcm-new")
+        session.registerToken("fcm-new")
+        assertEquals(1, forwarder.registerCount)
+
+        // Survives a process restart.
+        val restarted = session(forwarder, store, token = { "fcm-new" })
+        restarted.registerToken("fcm-new")
+        assertEquals(1, forwarder.registerCount)
+    }
+
+    @Test
+    fun rejectedCodeIsNotRetriedUntilNewPayload() {
+        val forwarder = FakePairForwarder().apply { error = ForwarderException.Unauthorized() }
+        val store = InMemoryPairStore()
+        val session = session(forwarder, store, token = { "fcm-token" })
+        session.pastePayload(payloadJson())
+        assertEquals(1, forwarder.joinCount)
+
+        session.registerToken("fcm-token")
+        session(forwarder, store, token = { "fcm-token" }).registerToken("fcm-token")
+        assertEquals(1, forwarder.joinCount)
+
+        forwarder.error = null
+        session.pastePayload(payloadJson())
+        assertEquals(2, forwarder.joinCount)
+        assertTrue(session.joined)
+    }
+
+    @Test
+    fun unjoinedStartJoinsOnce() {
+        val forwarder = FakePairForwarder()
+        val store = InMemoryPairStore()
+        store.stored = storedPair(joinSucceeded = false)
+        val session = session(forwarder, store, token = { "fcm-token" })
+
+        session.registerToken("fcm-token")
+        session.registerToken("fcm-token")
+
+        assertEquals(1, forwarder.joinCount)
+        assertEquals(0, forwarder.registerCount)
+        assertTrue(session.joined)
+    }
+
+    private fun storedPair(joinSucceeded: Boolean): StoredPair {
+        val mac = E2ECrypto.generateIdentity()
+        val phone = E2ECrypto.generateIdentity()
+        return StoredPair(
+            pairId = "dndsync-abc",
+            pairSecret = "secret",
+            forwarderUrl = "https://example.invalid",
+            privateKey = phone.privateKey,
+            publicKey = phone.publicKey,
+            peerPublicKey = mac.publicKey,
+            joinSucceeded = joinSucceeded,
+        )
+    }
+
     private fun session(
         forwarder: PairForwarder,
         store: PairStoring,

@@ -19,7 +19,12 @@ final class PairSession {
         return "production"
         #endif
     }()
-    private static let pollSeconds: Double = 15
+    /// Fallback while the QR is on screen; the forwarder's "joined" APNs
+    /// wake is the primary signal, so later checks back off.
+    private static let pollBackoffSeconds: [Double] = [15, 30, 60, 120, 300]
+    /// A paired Mac re-checks "was I unpaired?" at most this often. A deleted
+    /// pair is also caught by a flip's 401 and by the inbound unpair frame.
+    static let pairCheckInterval: TimeInterval = 12 * 60 * 60
     private static let qrScale: CGFloat = 10
     private static let qrCorrection = "M"
 
@@ -58,25 +63,33 @@ final class PairSession {
     private let secrets: PairSecretsSource
     private let apnsToken: () -> String
     private let deviceName: () -> String
+    private let now: () -> Date
 
     private var identity = E2ECrypto.generateIdentity()
     private var peerPublicKey: Data?
     private var aesKey: SymmetricKey?
     private var pollTask: Task<Void, Never>?
     private var createPairInFlight = false
+    private var registeredFingerprint: String?
+    private var lastPairCheck: Date?
+    /// Notify + delete of the previous pair. `create()` waits for it so a
+    /// re-used id (DEBUG) is never deleted after it was created again.
+    private var unpairCleanup: Task<Void, Never>?
 
     init(
         forwarder: PairForwarder,
         store: PairStoring,
         secrets: PairSecretsSource = .live,
         apnsToken: @escaping () -> String,
-        deviceName: @escaping () -> String = { Host.current().localizedName ?? "Mac" }
+        deviceName: @escaping () -> String = { Host.current().localizedName ?? "Mac" },
+        now: @escaping () -> Date = Date.init
     ) {
         self.forwarder = forwarder
         self.store = store
         self.secrets = secrets
         self.apnsToken = apnsToken
         self.deviceName = deviceName
+        self.now = now
     }
 
     func restore() {
@@ -96,6 +109,7 @@ final class PairSession {
             }
             pairStatusText = aesKey == nil ? "Pair: waiting for Android join" : "Pair: E2E ready"
             createdPairForCurrentId = true
+            registeredFingerprint = saved.registeredFingerprint
             lastSyncUnixMs = saved.lastSyncUnixMs
             lastSyncOn = saved.lastSyncOn
             lastSyncSender = saved.lastSyncSender
@@ -132,6 +146,7 @@ final class PairSession {
     }
 
     func create() async {
+        await unpairCleanup?.value
         if createPairInFlight || createdPairForCurrentId {
             return
         }
@@ -175,6 +190,7 @@ final class PairSession {
                 e2ePublicKey: e2ePublicKeyB64,
                 apnsEnvironment: Self.apnsEnvironment
             )
+            registeredFingerprint = fingerprint(token: token)
             persist()
             onPairIdChange?(pairId)
             createdPairForCurrentId = true
@@ -207,6 +223,14 @@ final class PairSession {
             }
             return
         }
+        // No server pair yet: `create()` registers this device with it.
+        guard createdPairForCurrentId else {
+            return
+        }
+        let current = fingerprint(token: token)
+        if current == registeredFingerprint {
+            return
+        }
         do {
             try await forwarder.registerDevice(
                 baseURL: forwarderURL,
@@ -218,6 +242,8 @@ final class PairSession {
                 e2ePublicKey: e2ePublicKeyB64,
                 apnsEnvironment: Self.apnsEnvironment
             )
+            registeredFingerprint = current
+            persist()
             lastRegisterText = "Last register: 204"
             lastCloudErrorText = "Last cloud error: —"
             publish()
@@ -307,6 +333,7 @@ final class PairSession {
                 e2ePublicKey: e2ePublicKeyB64,
                 apnsEnvironment: Self.apnsEnvironment
             )
+            registeredFingerprint = fingerprint(token: token)
             persist()
             createdPairForCurrentId = true
             pairingExpired = false
@@ -350,6 +377,8 @@ final class PairSession {
         pairPayloadJSON = ""
         qrImage = nil
         createdPairForCurrentId = false
+        registeredFingerprint = nil
+        lastPairCheck = nil
         pairStatusText = "Pair: cleared. Create a new pair."
         lastCloudErrorText = "Last cloud error: —"
         pairingExpired = false
@@ -361,19 +390,22 @@ final class PairSession {
         stopPeerPoll()
         onPairIdChange?(pairId)
         publish()
-        Task {
-            if canDelete {
-                if notify {
-                    await onNotifyPeerUnpair?(previous)
-                } else {
-                    try? await forwarder.deletePair(
-                        baseURL: previous.forwarderURL,
-                        pairId: previous.pairId,
-                        secret: previous.pairSecret
-                    )
-                }
+        // The next pair is created when the QR is shown (see
+        // `FocusHarnessModel.handleDestination`), not here, so unpairing with
+        // the window closed doesn't write a pair nobody is scanning.
+        guard canDelete else { return }
+        let forwarder = forwarder
+        let notifyPeer = onNotifyPeerUnpair
+        unpairCleanup = Task {
+            if notify {
+                await notifyPeer?(previous)
+            } else {
+                try? await forwarder.deletePair(
+                    baseURL: previous.forwarderURL,
+                    pairId: previous.pairId,
+                    secret: previous.pairSecret
+                )
             }
-            await create()
         }
     }
 
@@ -389,6 +421,11 @@ final class PairSession {
         guard joined, !forwarderURL.isEmpty, !pairSecret.isEmpty, !pairId.isEmpty else {
             return
         }
+        let checkedAt = now()
+        if let lastPairCheck, checkedAt.timeIntervalSince(lastPairCheck) < Self.pairCheckInterval {
+            return
+        }
+        lastPairCheck = checkedAt
         do {
             _ = try await forwarder.listDevices(
                 baseURL: forwarderURL,
@@ -405,9 +442,12 @@ final class PairSession {
     func startPeerPoll(shouldContinue: @escaping () -> Bool) {
         if pollTask != nil { return }
         pollTask = Task { [weak self] in
+            var attempt = 0
             while let self, !Task.isCancelled, shouldContinue(), self.aesKey == nil {
                 await self.fetchPeer()
-                try? await Task.sleep(for: .seconds(Self.pollSeconds))
+                let delays = Self.pollBackoffSeconds
+                try? await Task.sleep(for: .seconds(delays[min(attempt, delays.count - 1)]))
+                attempt += 1
             }
             self?.pollTask = nil
         }
@@ -509,9 +549,14 @@ final class PairSession {
                 lastSyncViaLan: lastSyncViaLan,
                 recentActivity: recentActivity.map {
                     PersistedSyncEvent(unixMs: $0.unixMs, on: $0.on, sender: $0.sender)
-                }
+                },
+                registeredFingerprint: registeredFingerprint
             )
         )
+    }
+
+    private func fingerprint(token: String) -> String {
+        E2ECrypto.sha256Hex("\(pairId)|\(token)|\(Self.apnsEnvironment)|\(e2ePublicKeyB64)")
     }
 
     private func autoUnpairIfExpired() {

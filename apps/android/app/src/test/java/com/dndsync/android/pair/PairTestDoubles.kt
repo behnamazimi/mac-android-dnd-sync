@@ -15,6 +15,8 @@ class InMemoryPairStore : PairStoring {
 class FakePairForwarder : PairForwarder {
     var joined = false
     var registered = false
+    var joinCount = 0
+    var registerCount = 0
     var deleted = false
     var envelopes = 0
     var error: Exception? = null
@@ -28,6 +30,7 @@ class FakePairForwarder : PairForwarder {
         token: String,
         e2ePublicKey: String?,
     ) {
+        registerCount += 1
         error?.let { throw it }
         registered = true
     }
@@ -41,6 +44,7 @@ class FakePairForwarder : PairForwarder {
         token: String,
         e2ePublicKey: String,
     ) {
+        joinCount += 1
         error?.let { throw it }
         joined = true
     }

@@ -25,6 +25,10 @@ struct PersistedPair: Codable {
     /// device only. Kept alongside `lastSync*` so quitting and relaunching
     /// the app doesn't drop the trail back to a single row.
     var recentActivity: [PersistedSyncEvent]
+    /// What this Mac last registered with the forwarder (pair id, APNs token,
+    /// environment, E2E key). An unchanged fingerprint skips the PUT that
+    /// every APNs re-registration on app activation would otherwise send.
+    var registeredFingerprint: String?
 
     init(
         pairId: String,
@@ -37,7 +41,8 @@ struct PersistedPair: Codable {
         lastSyncOn: Bool = false,
         lastSyncSender: String = "",
         lastSyncViaLan: Bool = false,
-        recentActivity: [PersistedSyncEvent] = []
+        recentActivity: [PersistedSyncEvent] = [],
+        registeredFingerprint: String? = nil
     ) {
         self.pairId = pairId
         self.pairSecret = pairSecret
@@ -50,6 +55,7 @@ struct PersistedPair: Codable {
         self.lastSyncSender = lastSyncSender
         self.lastSyncViaLan = lastSyncViaLan
         self.recentActivity = recentActivity
+        self.registeredFingerprint = registeredFingerprint
     }
 
     init(from decoder: Decoder) throws {
@@ -67,6 +73,7 @@ struct PersistedPair: Codable {
         // Missing for pairs persisted before this trail existed; `restore()`
         // seeds a single row from `lastSync*` in that case.
         recentActivity = try container.decodeIfPresent([PersistedSyncEvent].self, forKey: .recentActivity) ?? []
+        registeredFingerprint = try container.decodeIfPresent(String.self, forKey: .registeredFingerprint)
     }
 }
 

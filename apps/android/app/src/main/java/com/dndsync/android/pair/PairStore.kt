@@ -26,6 +26,10 @@ data class StoredPair(
     val lastSyncOn: Boolean = false,
     val lastSyncSender: String = "",
     val lastSyncViaLan: Boolean = false,
+    /** What this phone last registered with the forwarder; unchanged skips the PUT. */
+    val registeredFingerprint: String = "",
+    /** The forwarder rejected this code (401); don't re-join it on every start. */
+    val joinRejected: Boolean = false,
 )
 
 @Singleton
@@ -59,6 +63,8 @@ class PairStore @Inject constructor(
                 lastSyncOn = json.optBoolean("last_sync_on"),
                 lastSyncSender = json.optString("last_sync_sender"),
                 lastSyncViaLan = json.optBoolean("last_sync_via_lan"),
+                registeredFingerprint = json.optString("registered_fingerprint"),
+                joinRejected = json.optBoolean("join_rejected"),
             )
         } catch (_: Exception) {
             null
@@ -82,6 +88,8 @@ class PairStore @Inject constructor(
             .put("last_sync_on", pair.lastSyncOn)
             .put("last_sync_sender", pair.lastSyncSender)
             .put("last_sync_via_lan", pair.lastSyncViaLan)
+            .put("registered_fingerprint", pair.registeredFingerprint)
+            .put("join_rejected", pair.joinRejected)
         val (ciphertext, iv) = wrap(json.toString().toByteArray(Charsets.UTF_8))
         prefs.edit()
             .putString(PREF_BLOB, Base64.encodeToString(ciphertext, Base64.NO_WRAP))

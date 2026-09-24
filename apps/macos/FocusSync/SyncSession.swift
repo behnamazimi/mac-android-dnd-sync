@@ -18,6 +18,10 @@ final class SyncSession {
     private let cloud: SyncCloud
     private let pair: SyncPairing
     private let gate: LanSyncGate
+    /// Quick on→off→on flips collapse into one push carrying the latest
+    /// state. Last-write-wins makes the dropped intermediate states safe.
+    private let cloudCoalesce: Duration
+    private var pendingCloudPost: Task<Void, Never>?
 
     init(
         lan: SyncLan,
@@ -25,11 +29,13 @@ final class SyncSession {
         pair: SyncPairing,
         nowMs: @escaping () -> Int64 = {
             Int64(Date().timeIntervalSince1970 * 1000)
-        }
+        },
+        cloudCoalesce: Duration = .milliseconds(750)
     ) {
         self.lan = lan
         self.cloud = cloud
         self.pair = pair
+        self.cloudCoalesce = cloudCoalesce
         self.gate = LanSyncGate(sender: LanConstants.senderMac, nowMs: nowMs)
         wire()
     }
@@ -167,7 +173,12 @@ final class SyncSession {
     }
 
     private func postEnvelope(_ state: Dndsync_V1_DndState) {
-        Task {
+        pendingCloudPost?.cancel()
+        pendingCloudPost = Task { [cloudCoalesce] in
+            if cloudCoalesce > .zero {
+                try? await Task.sleep(for: cloudCoalesce)
+            }
+            guard !Task.isCancelled, pair.joined else { return }
             do {
                 let inner = try state.serializedData()
                 let ciphertext = try pair.seal(inner)
